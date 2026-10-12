@@ -12,13 +12,13 @@ const to = other(lang);
       <a href={`${langPath[lang]}#${t.anchors.specialties}`}>{t.nav.specialties}</a>
       <a href={`${langPath[lang]}#${t.anchors.insurance}`}>{t.nav.insurance}</a>
       <a href={`${langPath[lang]}#${t.anchors.contact}`}>{t.nav.contact}</a>
-      <a
-        class="lang-pill"
-        href={langPath[to]}
-        hreflang={to}
-        lang={to}
-        data-lang-switch
-      >{t.nav.switch_short}<span class="sr-only"> · {t.nav.switch_label}</span></a>
     </nav>
+    <a
+      class="lang-pill"
+      href={langPath[to]}
+      hreflang={to}
+      lang={to}
+      data-lang-switch
+    >{t.nav.switch_short}<span class="sr-only"> · {t.nav.switch_label}</span></a>
   </div>
 </header>

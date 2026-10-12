@@ -106,15 +106,16 @@ a:hover { color: var(--tinta); }
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px;
 }
 .wordmark { font-family: var(--display); font-size: 24px; color: var(--tinta); text-decoration: none; letter-spacing: .01em; }
-.nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; font-size: 16px; }
+.nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; font-size: 16px; margin-left: auto; }
 .nav a { color: var(--tinta); text-decoration: none; padding: 10px 0; }
 .nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
-.nav .lang-pill {
+.lang-pill {
+  color: var(--tinta); text-decoration: none;
   border: 1px solid var(--tinta); border-radius: 4px; padding: 8px 14px;
   font-weight: 700; font-size: 14px; letter-spacing: .08em; min-height: 44px;
   display: inline-flex; align-items: center;
 }
-.nav .lang-pill:hover { background: var(--tinta); color: var(--cal); text-decoration: none; }
+.lang-pill:hover { background: var(--tinta); color: var(--cal); }
 
 /* Hero */
 .hero {
@@ -206,6 +207,8 @@ a:hover { color: var(--tinta); }
 .crisis a { font-weight: 700; white-space: nowrap; }
 .footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; padding-top: 28px; font-size: 15px; color: var(--pie-suave); }
 
+@media (max-width: 380px) { .nav { font-size: 15px; } }
+
 /* Quick-contact bar (mobile only) */
 .quickbar { display: none; }
 
@@ -217,10 +220,18 @@ a:hover { color: var(--tinta); }
 /* ≤640 */
 @media (max-width: 640px) {
   body { padding-bottom: var(--bar-h); }
-  .nav { width: 100%; flex-wrap: nowrap; overflow-x: auto; gap: 0 22px; scrollbar-width: none; }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav a { white-space: nowrap; flex: 0 0 auto; }
-  .hero__art { max-width: 200px; flex: 0 0 auto; width: 200px; }
+  /* Header: name + language button on one row, the three links evenly on the next. No sideways scrolling. */
+  .site-header .wrap { gap: 4px 16px; padding-top: 14px; padding-bottom: 4px; }
+  .wordmark { font-size: 22px; flex: 1 1 auto; }
+  .nav { order: 3; width: 100%; margin-left: 0; flex-wrap: nowrap; justify-content: space-between; gap: 0 12px; }
+  .nav a { white-space: nowrap; padding: 12px 0; }
+  /* Hero: the arch rises straight out of the next band, like a doorway. */
+  .hero { padding-top: 40px; padding-bottom: 0; gap: 40px; }
+  .hero__art { max-width: 200px; flex: 0 0 auto; width: 200px; margin: 0 auto; }
+  /* Tighter section rhythm on phones. */
+  .band, .band--glass { padding-top: 56px; padding-bottom: 56px; }
+  .contact .h2 { margin-bottom: 28px; }
+  .certs-label { margin-top: 36px; }
   .m-hide { display: none !important; }
   .btns { flex-direction: column; }
   .btns .btn { justify-content: center; text-align: center; width: 100%; }
@@ -239,6 +250,6 @@ a:hover { color: var(--tinta); }
 }
 
 @media print {
-  .quickbar, .nav, .hero__art, .contact__art, .skip { display: none !important; }
+  .quickbar, .nav, .lang-pill, .hero__art, .contact__art, .skip { display: none !important; }
   body { padding-bottom: 0; }
 }
