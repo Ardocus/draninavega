@@ -191,3 +191,6 @@ dialog::backdrop { background: rgba(22, 51, 47, .55); }
 .group { border: 0; padding: 0; margin: 0; min-width: 0; }
 .group > legend { padding: 0; margin-bottom: 6px; }
 .group + .field, .field + .group, .group + .group, .group + .pair, .toggle + .group, .list + .group { margin-top: 20px; }
+.auth__main { position: relative; }
+.lang-toggle { position: absolute; top: 20px; right: var(--gutter); min-height: 44px; padding: 0 16px; font-size: 15px; }
+@media (max-width: 860px) { .auth__main { padding-top: 88px; align-items: flex-start; } }

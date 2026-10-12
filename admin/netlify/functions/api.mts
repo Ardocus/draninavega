@@ -4,7 +4,7 @@ import {
   HttpError, json, readJson, assertSameOrigin, str, cookie, clearCookie, SESSION_COOKIE, PENDING_COOKIE,
 } from '../../server/http.mts';
 import {
-  startLogin, finishLogin, requireUser, endSession, sessionMaxAge, changePassword, regenerateRecovery,
+  startLogin, finishLogin, finishBootstrap, requireUser, endSession, sessionMaxAge, changePassword, regenerateRecovery,
   signOutEverywhere, startPhoneChange, finishPhoneChange, setupEnabled, startSetup, finishSetup, audit, readAudit,
 } from '../../server/auth.mts';
 import { validate, toClient, changedPaths, serialize } from '../../server/content.mts';
@@ -27,8 +27,11 @@ const routes: Record<string, Handler> = {
 
   'POST /api/login': async (req, ip) => {
     const b = await readJson(req);
-    const { pendingId, maxAge } = await startLogin(str(b.username, 64), str(b.password, 256), ip);
-    return json({ next: 'code' }, 200, [cookie(PENDING_COOKIE, pendingId, maxAge)]);
+    const { pendingId, maxAge, enroll } = await startLogin(str(b.username, 64), str(b.password, 256), ip);
+    const next = enroll
+      ? { next: 'enroll', secret: enroll.secret, qr: `data:image/svg+xml;base64,${Buffer.from(qrSvg(enroll.uri)).toString('base64')}` }
+      : { next: 'code' };
+    return json(next, 200, [cookie(PENDING_COOKIE, pendingId, maxAge)]);
   },
 
   'POST /api/login/code': async (req, ip, ua) => {
@@ -36,6 +39,16 @@ const routes: Record<string, Handler> = {
     const { sid, user, usedRecovery } = await finishLogin(req, str(b.code, 20), ip, ua);
     return json(
       { signedIn: true, usedRecovery, user: { username: user.username, name: user.name, recoveryLeft: user.recovery.length } },
+      200,
+      [clearCookie(PENDING_COOKIE), cookie(SESSION_COOKIE, sid, sessionMaxAge())],
+    );
+  },
+
+  'POST /api/login/enroll': async (req, ip, ua) => {
+    const b = await readJson(req);
+    const { sid, user, codes } = await finishBootstrap(req, str(b.code, 20), str(b.name, 100), ip, ua);
+    return json(
+      { signedIn: true, codes, user: { username: user.username, name: user.name, recoveryLeft: user.recovery.length } },
       200,
       [clearCookie(PENDING_COOKIE), cookie(SESSION_COOKIE, sid, sessionMaxAge())],
     );

@@ -28,6 +28,9 @@ Object.assign(process.env, {
   SETUP_CODE: process.env.SETUP_CODE ?? 'local-dev-setup-code',
 });
 
+// Optional local bootstrap account: put a hash from `npm run hash-password` in .local-store/_bootstrap_hash
+try { process.env.BOOTSTRAP_PASSWORD_HASH ||= (await fs.readFile(path.join(storeDir, '_bootstrap_hash'), 'utf8')).trim(); } catch { /* none */ }
+
 const { default: api } = await import('./netlify/functions/api.mts');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png' };
 

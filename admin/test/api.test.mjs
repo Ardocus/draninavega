@@ -20,6 +20,8 @@ Object.assign(process.env, {
   ADMIN_LOCAL_REPO: path.join(tmp, 'repo'), DATA_KEY: randomBytes(32).toString('base64'),
   SETUP_CODE: 'test-setup-code-0123456789',
 });
+const BOOT_PW = 'bootstrap test pass 2026';
+process.env.BOOTSTRAP_PASSWORD_HASH = await (await import('../server/crypto.mts')).hashPassword(BOOT_PW);
 const { default: api } = await import('../netlify/functions/api.mts');
 const { hotp, base32Decode, currentStep } = await import('../server/totp.mts');
 
@@ -230,4 +232,32 @@ test('lockout behaves the same for accounts that do not exist (no enumeration)',
   for (let i = 0; i < 9; i++) last = await client(`10.4.0.${i}`)('POST', '/api/login', { username: 'ghostuser', password: `wrong-${i}-xxxxxxxx` });
   assert.equal(last.status, 429);
   assert.equal(last.body.error, 'locked');
+});
+
+test('bootstrap account: password only leads to forced 2FA enrollment, exactly once', async () => {
+  const c = client('10.6.0.1');
+  assert.equal((await c('POST', '/api/login', { username: 'admin', password: 'not the bootstrap pw' })).status, 401);
+
+  const r = await c('POST', '/api/login', { username: 'ADMIN', password: BOOT_PW });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.next, 'enroll');
+  assert.match(r.body.qr, /^data:image\/svg\+xml;base64,/);
+  assert.equal((await c('GET', '/api/content')).status, 401, 'no session before enrollment');
+  assert.equal((await c('POST', '/api/login/code', { code: '123456' })).status, 401, 'cannot skip enrollment');
+
+  // The skip attempt burned the pending login; start again.
+  const r2 = await c('POST', '/api/login', { username: 'admin', password: BOOT_PW });
+  const bootSecret = r2.body.secret;
+  assert.equal((await c('POST', '/api/login/enroll', { code: '000000' === codeAt(bootSecret) ? '111111' : '000000', name: 'Admin' })).status, 401);
+  const done = await c('POST', '/api/login/enroll', { code: codeAt(bootSecret), name: 'Dra. Nina M. Vega' });
+  assert.equal(done.status, 200, JSON.stringify(done.body));
+  assert.equal(done.body.codes.length, 10);
+  assert.equal((await c('GET', '/api/content')).status, 200, 'signed in after enrollment');
+
+  // From now on the stored account is used: normal 2FA, no second enrollment.
+  const d = client('10.6.0.2');
+  const again = await d('POST', '/api/login', { username: 'admin', password: BOOT_PW });
+  assert.equal(again.body.next, 'code');
+  assert.equal(again.body.secret, undefined);
+  assert.equal((await d('POST', '/api/login/code', { code: codeAt(bootSecret, 1) })).status, 200);
 });

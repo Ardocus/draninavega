@@ -32,7 +32,7 @@ export interface User {
   passwordChangedAt: string;
 }
 interface Session { username: string; epoch: number; created: number; seen: number; ip: string; ua: string }
-interface Pending { username: string; expires: number; tries: number }
+interface Pending { username: string; expires: number; tries: number; enroll?: string }
 interface Enroll { username: string; name: string; passHash: string; secret: string; expires: number }
 interface Limit { fails: number; since: number; lockedUntil: number; locks: number }
 
@@ -133,20 +133,87 @@ async function checkSecondFactor(user: User, code: string): Promise<'totp' | 're
 }
 
 // ── Login ────────────────────────────────────────────────────────────────
+// ── Bootstrap account ────────────────────────────────────────────────────
+// First-ever sign-in with BOOTSTRAP_USER + the password whose scrypt hash is in
+// BOOTSTRAP_PASSWORD_HASH (env only — never in the repo). It doesn't create a
+// session: it forces authenticator enrollment first. Once that account exists
+// in the store, the env hash is ignored for good.
+const bootstrapUser = () => (process.env.BOOTSTRAP_USER || 'admin').trim().toLowerCase();
+const bootstrapHash = () => {
+  const h = (process.env.BOOTSTRAP_PASSWORD_HASH || '').trim();
+  return h.startsWith('scrypt$') ? h : '';
+};
+
 export async function startLogin(usernameIn: string, password: string, ip: string) {
   const username = usernameIn.trim().toLowerCase();
   await assertNotLimited(ip, validUsername(username) ? username : undefined);
   const user = await getUser(username);
-  const ok = user ? await verifyPassword(password, user.passHash) : (await burnPasswordCheck(password), false);
-  if (!user || !ok) {
+  const isBootstrap = !user && username === bootstrapUser() && !!bootstrapHash();
+  const ok = user
+    ? await verifyPassword(password, user.passHash)
+    : isBootstrap
+      ? await verifyPassword(password, bootstrapHash())
+      : (await burnPasswordCheck(password), false);
+  if (!ok) {
     // Count failures for any well-formed username, so lockouts don't reveal which accounts exist.
     await recordFailure(ip, validUsername(username) ? username : undefined);
-    if (user) await audit('login_failed', username, ip, 'password');
+    if (user || isBootstrap) await audit('login_failed', username, ip, 'password');
     throw new HttpError(401, 'invalid_credentials');
   }
   const pendingId = token();
-  await (await store()).set(`pending:${sha256(pendingId)}`, { username, expires: now() + PENDING_TTL_MS, tries: 0 } satisfies Pending);
-  return { pendingId, maxAge: PENDING_TTL_MS / 1000 };
+  const pending: Pending = { username, expires: now() + (isBootstrap ? ENROLL_TTL_MS : PENDING_TTL_MS), tries: 0 };
+  let enroll: { secret: string; uri: string } | undefined;
+  if (isBootstrap) {
+    const secret = newSecret();
+    pending.enroll = encrypt(secret);
+    enroll = { secret, uri: otpauthUri(secret, username) };
+    await audit('bootstrap_login', username, ip);
+  }
+  await (await store()).set(`pending:${sha256(pendingId)}`, pending);
+  return { pendingId, maxAge: (isBootstrap ? ENROLL_TTL_MS : PENDING_TTL_MS) / 1000, enroll };
+}
+
+/** Completes the bootstrap: verifies the first code from the new authenticator and creates the account. */
+export async function finishBootstrap(req: Request, code: string, nameIn: string, ip: string, ua: string) {
+  const pendingId = readCookies(req)[PENDING_COOKIE];
+  if (!pendingId) throw new HttpError(401, 'mfa_expired');
+  const kv = await store();
+  const pKey = `pending:${sha256(pendingId)}`;
+  const pending = await kv.get<Pending>(pKey);
+  if (!pending?.enroll || pending.expires < now() || pending.tries >= PENDING_MAX_TRIES) {
+    await kv.del(pKey);
+    throw new HttpError(401, 'mfa_expired');
+  }
+  await assertNotLimited(ip, pending.username);
+  if (await getUser(pending.username)) { await kv.del(pKey); throw new HttpError(409, 'user_exists'); }
+  const name = nameIn.trim().slice(0, 80);
+  if (name.length < 2) throw new HttpError(400, 'bad_name');
+
+  const step = verifyTotp(decrypt(pending.enroll), code.replace(/\s/g, ''));
+  if (step === null) {
+    pending.tries++;
+    await kv.set(pKey, pending);
+    await recordFailure(ip, pending.username);
+    throw new HttpError(401, 'invalid_code', { triesLeft: PENDING_MAX_TRIES - pending.tries });
+  }
+  const codes = recoveryCodes();
+  const user: User = {
+    username: pending.username,
+    name,
+    passHash: bootstrapHash(),
+    totp: pending.enroll,
+    lastStep: step,
+    recovery: codes.map((c) => keyedHash(normalizeRecovery(c))),
+    epoch: 1,
+    createdAt: iso(),
+    passwordChangedAt: iso(),
+  };
+  await saveUser(user);
+  await kv.del(pKey);
+  await clearUserFailures(user.username);
+  await audit('account_created', user.username, ip, 'bootstrap');
+  const sid = await createSession(user, ip, ua);
+  return { sid, user, codes };
 }
 
 export async function finishLogin(req: Request, code: string, ip: string, ua: string) {
@@ -155,7 +222,7 @@ export async function finishLogin(req: Request, code: string, ip: string, ua: st
   const kv = await store();
   const pKey = `pending:${sha256(pendingId)}`;
   const pending = await kv.get<Pending>(pKey);
-  if (!pending || pending.expires < now() || pending.tries >= PENDING_MAX_TRIES) {
+  if (!pending || pending.enroll || pending.expires < now() || pending.tries >= PENDING_MAX_TRIES) {
     await kv.del(pKey);
     throw new HttpError(401, 'mfa_expired');
   }

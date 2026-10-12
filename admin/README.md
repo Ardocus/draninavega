@@ -1,6 +1,6 @@
 # Portal administrativo — admin.draninavega.com
 
-A private portal where Dra. Vega updates her website herself. Spanish UI, password + authenticator-app login, no source code involved.
+A private portal where Dra. Vega updates her website herself. Login screens in Spanish or English (toggle), editor in Spanish; password + authenticator-app login; no source code involved.
 
 **How it works.** She edits fields → the portal's server function validates everything → it commits `src/data/practice.json` / `src/data/settings.json` to GitHub in one commit → Netlify rebuilds draninavega.com (~1–2 min) → the portal shows "Sus cambios ya están en la página".
 
@@ -29,15 +29,18 @@ GitHub → Settings → Developer settings → Personal access tokens → **Fine
 - Permissions → Repository → **Contents: Read and write** (Metadata: read is added automatically). Nothing else.
 - Expiration: 1 year. Put a calendar reminder to rotate it.
 
-### 2. Generate the two secrets
+### 2. Generate the secrets
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 ↑ `DATA_KEY` (encrypts authenticator secrets; keep a copy in your password manager — losing it means re-enrolling).
+
 ```bash
-node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"
+cd admin
+npm install
+npm run hash-password
 ```
-↑ `SETUP_CODE` (temporary; removed after setup).
+↑ type the bootstrap password and press Enter. The output (`scrypt$131072$8$1$…`) is `BOOTSTRAP_PASSWORD_HASH`. The password itself is never stored anywhere — not in the repo (which is public), not in Netlify.
 
 ### 3. Create the Netlify project
 Netlify → **Add new project → Import an existing project → GitHub → `Ardocus/draninavega`**:
@@ -50,11 +53,14 @@ Netlify → **Add new project → Import an existing project → GitHub → `Ard
 | --- | --- |
 | `GITHUB_TOKEN` | token from step 1 |
 | `DATA_KEY` | from step 2 |
-| `SETUP_CODE` | from step 2 (temporary) |
+| `BOOTSTRAP_PASSWORD_HASH` | from step 2 |
+| `BOOTSTRAP_USER` | `admin` (optional; this is the default) |
 | `ADMIN_ORIGIN` | `https://admin.draninavega.com` |
 | `PUBLIC_SITE_URL` | `https://draninavega.com` |
 | `GITHUB_REPO` | `Ardocus/draninavega` |
 | `GITHUB_BRANCH` | `main` |
+
+`SETUP_CODE` is **not** needed for the first account; it's only for resets or extra accounts (see below).
 
 **Turn off previews** (Project configuration → Build & deploy → Branches and deploy contexts): Branch deploys **None**, Deploy previews **None**. Preview URLs would otherwise run the functions with production secrets.
 
@@ -62,15 +68,19 @@ Netlify → **Add new project → Import an existing project → GitHub → `Ard
 
 Deploy (Deploys → Trigger deploy).
 
-### 4. Enroll the doctor (do this together, ~5 minutes)
+### 4. First sign-in (do it right after deploying, ~5 minutes)
+Until this is done, the `admin` account is protected by the password only — whoever signs in first enrolls their phone. So do it immediately, together with the doctor:
 1. She installs **Google Authenticator** or **Microsoft Authenticator** on her phone.
-2. Open `https://admin.draninavega.com/#configurar`, enter the `SETUP_CODE`, her name, a username (e.g. `dranvega`) and a passphrase she'll remember (12+ characters).
-3. She scans the QR code and types the 6-digit code.
+2. Open `https://admin.draninavega.com`, choose Español/English (top right), sign in as **`admin`** with the bootstrap password.
+3. The portal goes straight to *Conecte su teléfono*: enter her name, scan the QR, type the 6-digit code.
 4. **Save the 10 recovery codes** (download/print; keep them away from the phone).
-5. Optional: repeat for your own account so you can help her.
+5. Recommended: Seguridad → *Contraseña* → change the password (the bootstrap one has been shared in chat/messages).
 
-### 5. Close setup
-Delete `SETUP_CODE` from the environment variables and **Trigger deploy** again. The "Configurar" link disappears and the setup endpoints return 404.
+### 5. Close the bootstrap
+Delete `BOOTSTRAP_PASSWORD_HASH` from the environment variables and redeploy. (It's already inert once the `admin` account exists — the stored account always wins — but removing it is tidier.) Check *Actividad*: you should see exactly one `Cuenta creada` from your own IP.
+
+### Extra accounts (optional)
+To add an account for yourself: set `SETUP_CODE` (`node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"`), redeploy, open `#configurar`, then delete `SETUP_CODE` and redeploy.
 
 ---
 
@@ -91,8 +101,9 @@ cd admin
 npm install
 npm run dev     # http://localhost:8888 · setup code: local-dev-setup-code
 npm test        # API security tests
+npm run hash-password   # make a BOOTSTRAP_PASSWORD_HASH
 ```
-Local mode stores accounts in `admin/.local-store/` (git-ignored) and edits `../src/data/*.json` directly, so you can preview with `npm run dev` in the root.
+Local mode stores accounts in `admin/.local-store/` (git-ignored; put a hash in `.local-store/_bootstrap_hash` to try the bootstrap login) and edits `../src/data/*.json` directly, so you can preview with `npm run dev` in the root.
 
 ## Files
 | File | Purpose |

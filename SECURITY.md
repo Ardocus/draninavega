@@ -24,6 +24,7 @@ Date: 2026-10-11 · Scope: everything in this repo (public site, admin portal, N
 | Area | Control |
 | --- | --- |
 | Authentication | Username + password (scrypt N=2^17, r=8, p=1, 16-byte salt — OWASP minimum) **and** TOTP (RFC 6238, ±1 step, replay-protected via last-used step). Password-only never yields a session. |
+| First account (bootstrap) | `admin` + a password whose **scrypt hash only** lives in the `BOOTSTRAP_PASSWORD_HASH` env var (never the repo). A correct bootstrap password yields **no session**: it forces authenticator enrollment (QR → first code) and recovery codes before the account is created. The pending enrollment can't be used with the normal code endpoint, and once the account exists the env hash is ignored. Same rate limits and audit as normal logins. |
 | Recovery | 10 one-time codes (~40 bits each), stored as HMAC-SHA256 keyed with `DATA_KEY`; regenerating requires a fresh TOTP. Self-service phone change requires password + current code. |
 | Secrets at rest | TOTP secrets AES-256-GCM encrypted with `DATA_KEY` (env var, not in Blobs). Session IDs stored only as SHA-256. |
 | Sessions | 256-bit random IDs, server-side (revocable), 30 min idle / 8 h absolute, rotated at login and password change. Cookie: `__Host-` prefix, `HttpOnly; Secure; SameSite=Strict; Path=/`. "Sign out everywhere" via per-user epoch. |
@@ -49,11 +50,12 @@ Date: 2026-10-11 · Scope: everything in this repo (public site, admin portal, N
 | F6 | Low | Public CSP was a `<meta>` (no `frame-ancestors`); no HSTS. | CSP moved to response headers; HSTS added. |
 | F7 | Low | Local dev server listened on all interfaces with a default setup code. | Binds to `127.0.0.1`. |
 | F8 | Info | Directions URL stored as free text; Facebook URL rendered without scheme check. | Maps URL derived from the address; Facebook allowlisted at build and at input. |
+| F10 | Medium | Requested fixed bootstrap credentials (`admin` / chosen password) would have been readable in the **public** repo if hard-coded. | Only the scrypt hash, only in a Netlify env var; generated via stdin (`npm run hash-password`); verified absent from the repo. Forced 2FA enrollment on first use. |
 | F9 | Info | No self-service way to move 2FA to a new phone (would force an admin reset, weakening process). | Added password + current-code gated phone change. |
 
 ## 4. Verification
 
-- `cd admin && npm test` — 14 end-to-end tests against the real handler: cookie flags, CSRF rejection, setup-code checks, password-only ≠ session, identical errors for unknown users, TOTP rejection + **replay**, recovery codes single-use, schema rejection (bad phone, `javascript:` URL, control chars, duplicates), unknown-key stripping, crisis-line preservation, conflict detection, per-user and per-IP lockout, enumeration parity, secrets encrypted/hashed at rest, phone change.
+- `cd admin && npm test` — 15 end-to-end tests against the real handler: cookie flags, CSRF rejection, setup-code checks, password-only ≠ session, identical errors for unknown users, TOTP rejection + **replay**, recovery codes single-use, schema rejection (bad phone, `javascript:` URL, control chars, duplicates), unknown-key stripping, crisis-line preservation, conflict detection, per-user and per-IP lockout, enumeration parity, secrets encrypted/hashed at rest, phone change, bootstrap login (wrong password, no session before enrollment, enrollment can't be skipped or repeated).
 - TOTP verified against the RFC 6238 SHA-1 test vector.
 - Public build injection test: `</script>`, `"><img onerror>`, `<b onmouseover>`, `javascript:` — all neutralized in `dist/`.
 - Manual run-through of setup → QR → recovery codes → login → edit → review → publish → public build.
@@ -63,6 +65,7 @@ Date: 2026-10-11 · Scope: everything in this repo (public site, admin portal, N
 | # | Risk | Recommendation |
 | --- | --- | --- |
 | R1 | **The GitHub token can change site code**, not just data (Contents R/W is repo-wide). Compromise of the admin function's environment ⇒ ability to push to the public site. | Keep secrets scoped to *Functions + Production* only; previews off (see admin/README). Rotate yearly. For stronger isolation later: move `src/data` into a separate data-only repo that the site fetches at build time, and give the token access only to that repo. |
+| R10 | **Bootstrap window:** until the first sign-in completes, `admin` is password-only — whoever enrolls first owns it. The password was also shared in chat. | Do the first sign-in immediately after the deploy; confirm a single `Cuenta creada` in *Actividad*; change the password afterwards; then delete `BOOTSTRAP_PASSWORD_HASH`. |
 | R2 | **Netlify and GitHub accounts are the root of trust** (env vars, setup code, deploys). | Enforce 2FA (ideally passkeys/security keys) on Angel's GitHub and Netlify accounts. Limit Netlify team members. |
 | R3 | **Repo is public.** No secrets are in it, but commit messages carry her display name and publish times. | Make `Ardocus/draninavega` private (Netlify works the same). |
 | R4 | TOTP is phishable by a real-time proxy. | Future: add WebAuthn passkeys as the primary factor. Tell her the portal is only ever at `admin.draninavega.com`. |
@@ -77,7 +80,8 @@ Date: 2026-10-11 · Scope: everything in this repo (public site, admin portal, N
 - [ ] Fine-grained GitHub token: one repo, Contents only, 1-year expiry, reminder set
 - [ ] Admin env vars scoped to Functions / Production; secrets marked secret
 - [ ] Admin project: branch deploys and deploy previews **off**
-- [ ] `SETUP_CODE` (and `SETUP_ALLOW_RESET`) removed after enrollment + redeploy
+- [ ] First `admin` sign-in done right after deploy; one `Cuenta creada` in Actividad; bootstrap password changed
+- [ ] `BOOTSTRAP_PASSWORD_HASH`, `SETUP_CODE` and `SETUP_ALLOW_RESET` removed after use + redeploy
 - [ ] 2FA on Angel's GitHub and Netlify accounts
 - [ ] Repo set to private
 - [ ] Recovery codes printed and stored away from her phone
