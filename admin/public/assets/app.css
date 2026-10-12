@@ -194,3 +194,5 @@ dialog::backdrop { background: rgba(22, 51, 47, .55); }
 .auth__main { position: relative; }
 .lang-toggle { position: absolute; top: 20px; right: var(--gutter); min-height: 44px; padding: 0 16px; font-size: 15px; }
 @media (max-width: 860px) { .auth__main { padding-top: 88px; align-items: flex-start; } }
+.status.is-warn { background: var(--papel); border-top: 3px solid var(--flamboyan); }
+.is-warn .dot { background: var(--flamboyan); }

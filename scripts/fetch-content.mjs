@@ -22,7 +22,13 @@ const fail = (why) => {
 };
 
 if (!url) {
-  console.log('fetch-content: ADMIN_EXPORT_URL not set, using the committed src/data files.');
+  if (process.env.NETLIFY === 'true') {
+    console.warn('\n*** fetch-content: ADMIN_EXPORT_URL is NOT set on this Netlify project. ***');
+    console.warn('*** Building from the committed src/data files: changes published in the admin portal will NOT appear. ***');
+    console.warn('*** Set ADMIN_EXPORT_URL and EXPORT_TOKEN (scope: Builds) on the public project. ***\n');
+  } else {
+    console.log('fetch-content: ADMIN_EXPORT_URL not set, using the committed src/data files.');
+  }
   process.exit(0);
 }
 if (!/^https:\/\//.test(url) && !/^http:\/\/(localhost|127\.0\.0\.1)[:/]/.test(url)) fail('ADMIN_EXPORT_URL must be https.');

@@ -123,6 +123,7 @@ const state = {
   version: null,    // content version the draft is based on
   lastPublish: null,
   publishing: false,
+  deploy: null,      // last /api/status answer: what the public site is showing
   notice: null,
   authNotice: null, // message key shown on the login screen
 };

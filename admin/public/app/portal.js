@@ -279,17 +279,49 @@ async function renderEditor(main) {
   );
   state.notice = null;
   updateSaveBar();
+  if (!state.publishing) checkDeployOnce();
+}
+
+/**
+ * What the public site is actually showing, from /api/status. Returns a warning
+ * (Spanish, for the doctor, naming what Angel must fix) or null when all is well.
+ */
+function deployProblem(s) {
+  if (!s) return null;
+  if (s.hook === false) {
+    return 'Sus cambios se guardaron, pero la página pública no se actualiza sola todavía. Avísele a Angel: falta PUBLIC_BUILD_HOOK en el proyecto del portal.';
+  }
+  if (s.deployed === 0 && s.version > 1) {
+    return 'Sus cambios se guardaron, pero la página pública todavía no lee el portal. Avísele a Angel: faltan ADMIN_EXPORT_URL y EXPORT_TOKEN en el proyecto público de Netlify.';
+  }
+  if (s.live === false && !state.publishing) {
+    return 'Sus últimos cambios todavía no aparecen en la página. Si en 10 minutos siguen sin aparecer, avísele a Angel (revisar «Deploys» del proyecto público).';
+  }
+  return null;
 }
 
 function statusBand() {
-  const band = h('div', { class: `status${state.publishing ? ' is-busy' : ''}`, role: 'status', 'aria-live': 'polite' });
+  const problem = deployProblem(state.deploy);
+  const band = h('div', { class: `status${state.publishing ? ' is-busy' : ''}${problem ? ' is-warn' : ''}`, role: 'status', 'aria-live': 'polite' });
   const lp = state.lastPublish;
   const when = lp ? new Date(lp.at).toLocaleString('es-PR', { dateStyle: 'long', timeStyle: 'short' }) : null;
+  const line = state.publishing
+    ? 'Publicando sus cambios… aparecerán en la página en 1 a 2 minutos.'
+    : problem || (state.deploy?.live ? 'La página está al día.' : 'Comprobando la página…');
   band.append(h('div', { class: 'wrap' },
-    h('p', {}, h('span', { class: 'dot', 'aria-hidden': 'true' }),
-      state.publishing ? 'Publicando sus cambios… aparecerán en la página en 1 a 2 minutos.' : 'La página está al día.'),
+    h('p', {}, h('span', { class: 'dot', 'aria-hidden': 'true' }), line),
     when && h('p', { class: 'small muted' }, `Última publicación: ${when}, por ${lp.by}`)));
   return band;
+}
+
+function refreshStatusBand() {
+  if (route() === 'contenido') document.querySelector('.status')?.replaceWith(statusBand());
+}
+
+/** One status check when the editor opens, so a broken connection is visible right away. */
+async function checkDeployOnce() {
+  try { state.deploy = await api('GET', '/api/status'); } catch { state.deploy = null; }
+  if (!state.publishing) refreshStatusBand();
 }
 
 let saveBarEl;
@@ -362,11 +394,13 @@ function watchDeploy() {
     tries++;
     try {
       const s = await api('GET', '/api/status');
-      if (s.live === true || tries > 36) {
+      state.deploy = s;
+      // Stop when it's live, when nothing will ever rebuild (no hook), or after ~6 minutes.
+      if (s.live === true || s.hook === false || tries > 36) {
         clearInterval(deployTimer);
         state.publishing = false;
         if (route() === 'contenido' && !dirty()) {
-          document.querySelector('.status')?.replaceWith(statusBand());
+          refreshStatusBand();   // shows the specific problem if it isn't live
           if (s.live) document.querySelector('.status p')?.replaceChildren(h('span', { class: 'dot', 'aria-hidden': 'true' }), 'Sus cambios ya están en la página.');
         }
       }

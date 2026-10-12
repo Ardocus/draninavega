@@ -90,7 +90,13 @@ const routes: Record<string, Handler> = {
     await requireUser(req);
     const c = await loadContent();
     const deployed = await deployedVersion();
-    return json({ live: env.local ? true : deployed === null ? null : deployed >= c.version, hook: env.local || !!env.buildHook });
+    // deployed: the content version the public site was built with (0 = built from the repo, not the portal).
+    return json({
+      live: env.local ? true : deployed === null ? null : deployed >= c.version,
+      hook: env.local || !!env.buildHook,
+      deployed: env.local ? c.version : deployed,
+      version: c.version,
+    });
   },
 
   // Read by the public site's build only. Everything returned here is public anyway.
