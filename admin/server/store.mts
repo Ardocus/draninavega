@@ -27,12 +27,15 @@ export async function store(): Promise<KV> {
       async del(k) { await fs.rm(file(k), { force: true }); },
     };
   } else {
+    // Netlify injects the Blobs credentials per request, and they expire. Never reuse
+    // a store across invocations: a warm function would keep a stale token and every
+    // call after the first would fail. Create it fresh for each operation instead.
     const { getStore } = await import('@netlify/blobs');
-    const s = getStore({ name: 'admin-portal', consistency: 'strong' });
+    const s = () => getStore({ name: 'admin-portal', consistency: 'strong' });
     kv = {
-      get: (k) => s.get(k, { type: 'json' }),
-      set: async (k, v) => { await s.setJSON(k, v); },
-      del: (k) => s.delete(k),
+      get: (k) => s().get(k, { type: 'json' }),
+      set: async (k, v) => { await s().setJSON(k, v); },
+      del: (k) => s().delete(k),
     };
   }
   return kv;

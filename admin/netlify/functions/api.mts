@@ -173,8 +173,12 @@ export default async (req: Request, context: Ctx) => {
     return await route(req, ip, ua);
   } catch (e) {
     if (e instanceof HttpError) return json({ error: e.code, ...e.extra }, e.status);
-    console.error('admin api error:', e instanceof Error ? e.message : 'unknown');
-    return json({ error: 'server_error' }, 500);
+    console.error('admin api error:', e instanceof Error ? `${e.name}: ${e.message}\n${e.stack}` : 'unknown');
+    // Only the error's class/code (e.g. BlobsInternalError), never its message or data,
+    // so problems can be diagnosed from outside without leaking anything.
+    const err = e as { name?: string; code?: string };
+    const kind = [err?.name, err?.code].filter((x) => typeof x === 'string' && /^[\w.-]{1,60}$/.test(x)).join('/');
+    return json({ error: 'server_error', kind: kind || 'unknown' }, 500);
   }
 };
 
