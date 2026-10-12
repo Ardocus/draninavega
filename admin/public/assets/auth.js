@@ -31,6 +31,7 @@ const AUTH = {
     typeCode: 'Escriba el código de 6 dígitos que muestra la aplicación.',
     verify: 'Verificar',
     firstLogin: 'Primer acceso · Paso 1 de 2',
+    enrollHint: 'Si escaneó un código antes, use esa misma entrada «draninavega.com: admin» (este código QR no cambia) y borre las otras. Confirme también que la hora del teléfono esté en automático.',
     firstIntro: 'Antes de entrar, conecte su teléfono. Desde ahora, cada entrada pedirá su contraseña y un código del teléfono.',
     saveStep: 'Primer acceso · Paso 2 de 2',
     saveTitle: 'Guarde estos códigos',
@@ -69,6 +70,7 @@ const AUTH = {
     typeCode: 'Enter the 6-digit code the app shows.',
     verify: 'Verify',
     firstLogin: 'First sign-in · Step 1 of 2',
+    enrollHint: 'If you scanned a code before, use that same "draninavega.com: admin" entry (this QR code does not change) and delete any others. Also check that the time on the phone is set automatically.',
     firstIntro: 'Before you continue, connect your phone. From now on, every sign-in asks for your password and a code from the phone.',
     saveStep: 'First sign-in · Step 2 of 2',
     saveTitle: 'Save these codes',
@@ -226,7 +228,9 @@ function renderBootstrap(r) {
           }, T().saveStep);
         } catch (ex) {
           if (ex.data.error === 'mfa_expired') { state.authNotice = 'mfa_expired'; return renderLogin(); }
-          err.append(errorBox(msg(ex, authLang))); code.value = ''; code.focus();
+          err.append(errorBox(msg(ex, authLang)));
+          if (ex.data.error === 'invalid_code') err.append(h('p', { class: 'hint' }, T().enrollHint));
+          code.value = ''; code.focus();
         } finally { busy(go, false, true); }
       },
     },

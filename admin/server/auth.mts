@@ -13,6 +13,7 @@ export const SESSION_MAX_MS = 8 * 3600_000;      // and after 8 h regardless
 const PENDING_TTL_MS = 5 * 60_000;               // password OK → 5 min to enter the code
 const PENDING_MAX_TRIES = 5;
 const ENROLL_TTL_MS = 15 * 60_000;
+const BOOTSTRAP_SECRET_TTL_MS = 24 * 3600_000;  // same QR for every bootstrap attempt within a day
 const USER_MAX_FAILS = 8;                        // then lock the account…
 const USER_LOCK_MS = 15 * 60_000;                // …for 15 min, doubling each time (max 4 h)
 const IP_MAX_FAILS = 20;                         // per IP per 15 min, across all accounts
@@ -163,8 +164,17 @@ export async function startLogin(usernameIn: string, password: string, ip: strin
   const pending: Pending = { username, expires: now() + (isBootstrap ? ENROLL_TTL_MS : PENDING_TTL_MS), tries: 0 };
   let enroll: { secret: string; uri: string } | undefined;
   if (isBootstrap) {
-    const secret = newSecret();
-    pending.enroll = encrypt(secret);
+    // Reuse the same authenticator secret for every bootstrap attempt (24 h), so a
+    // QR scanned on an earlier, unfinished attempt keeps working.
+    const kv = await store();
+    const bKey = `bootstrap:${username}`;
+    let boot = await kv.get<{ secret: string; expires: number }>(bKey);
+    if (!boot || boot.expires < now()) {
+      boot = { secret: encrypt(newSecret()), expires: now() + BOOTSTRAP_SECRET_TTL_MS };
+      await kv.set(bKey, boot);
+    }
+    const secret = decrypt(boot.secret);
+    pending.enroll = boot.secret;
     pending.passHash = await hashPassword(password);
     enroll = { secret, uri: otpauthUri(secret, username) };
     await audit('bootstrap_login', username, ip);
@@ -211,6 +221,7 @@ export async function finishBootstrap(req: Request, code: string, nameIn: string
   await saveUser(user);
   await kv.del(pKey);
   await clearUserFailures(user.username);
+  await kv.del(`bootstrap:${user.username}`);
   await audit('account_created', user.username, ip, 'bootstrap');
   const sid = await createSession(user, ip, ua);
   return { sid, user, codes };

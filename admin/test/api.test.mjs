@@ -301,3 +301,25 @@ test('bootstrap account: password only leads to forced 2FA enrollment, exactly o
   assert.equal(again.body.secret, undefined);
   assert.equal((await d('POST', '/api/login/code', { code: codeAt(bootSecret, 1) })).status, 200);
 });
+
+test('bootstrap shows the same QR on every attempt until setup is finished', async () => {
+  // Fresh store key so this doesn't depend on the earlier bootstrap test's account.
+  process.env.BOOTSTRAP_USER = 'firstuser';
+  try {
+    const a = await client('10.7.0.1')('POST', '/api/login', { username: 'firstuser', password: BOOT_PW });
+    const b = await client('10.7.0.2')('POST', '/api/login', { username: 'firstuser', password: BOOT_PW });
+    assert.equal(a.body.next, 'enroll');
+    assert.equal(a.body.secret, b.body.secret, 'a QR scanned on the first attempt must still work');
+    // Finishing with a code from that first scan works on the later attempt.
+    const c = client('10.7.0.3');
+    const r = await c('POST', '/api/login', { username: 'firstuser', password: BOOT_PW });
+    const done = await c('POST', '/api/login/enroll', { code: codeAt(a.body.secret), name: 'First User' });
+    assert.equal(done.status, 200, JSON.stringify(done.body));
+    assert.equal(r.body.secret, a.body.secret);
+    // After setup, a new bootstrap user gets a fresh secret (the old one was deleted).
+    const again = await client('10.7.0.4')('POST', '/api/login', { username: 'firstuser', password: BOOT_PW });
+    assert.equal(again.body.next, 'code');
+  } finally {
+    delete process.env.BOOTSTRAP_USER;
+  }
+});
