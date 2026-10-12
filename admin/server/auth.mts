@@ -3,7 +3,7 @@ import { env } from './env.mts';
 import { HttpError, readCookies, SESSION_COOKIE, PENDING_COOKIE } from './http.mts';
 import {
   hashPassword, verifyPassword, burnPasswordCheck, token, sha256, safeEqual,
-  recoveryCodes, normalizeRecovery, keyedHash, encrypt, decrypt,
+  recoveryCodes, normalizeRecovery, keyedHash, encrypt, decrypt, signSession, verifySessionCookie,
 } from './crypto.mts';
 import { verifyTotp, newSecret, otpauthUri, currentStep } from './totp.mts';
 
@@ -32,7 +32,7 @@ export interface User {
   passwordChangedAt: string;
 }
 interface Session { username: string; epoch: number; created: number; seen: number; ip: string; ua: string }
-interface Pending { username: string; expires: number; tries: number; enroll?: string }
+interface Pending { username: string; expires: number; tries: number; enroll?: string; passHash?: string }
 interface Enroll { username: string; name: string; passHash: string; secret: string; expires: number }
 interface Limit { fails: number; since: number; lockedUntil: number; locks: number }
 
@@ -134,25 +134,24 @@ async function checkSecondFactor(user: User, code: string): Promise<'totp' | 're
 
 // ── Login ────────────────────────────────────────────────────────────────
 // ── Bootstrap account ────────────────────────────────────────────────────
-// First-ever sign-in with BOOTSTRAP_USER + the password whose scrypt hash is in
-// BOOTSTRAP_PASSWORD_HASH (env only — never in the repo). It doesn't create a
-// session: it forces authenticator enrollment first. Once that account exists
-// in the store, the env hash is ignored for good.
-const bootstrapUser = () => (process.env.BOOTSTRAP_USER || 'admin').trim().toLowerCase();
-const bootstrapHash = () => {
-  const h = (process.env.BOOTSTRAP_PASSWORD_HASH || '').trim();
-  return h.startsWith('scrypt$') ? h : '';
+// First-ever sign-in with BOOTSTRAP_USER + BOOTSTRAP_PASSWORD (env vars, never
+// the repo). It doesn't create a session: it forces authenticator enrollment
+// first, then stores a scrypt hash of the password. Once that account exists
+// in the store, the env password is ignored for good; delete it afterwards.
+const bootstrapPasswordOk = (pw: string) => {
+  const boot = env.bootstrapPassword;
+  return boot.length >= 12 && safeEqual(pw, boot);
 };
 
 export async function startLogin(usernameIn: string, password: string, ip: string) {
   const username = usernameIn.trim().toLowerCase();
   await assertNotLimited(ip, validUsername(username) ? username : undefined);
   const user = await getUser(username);
-  const isBootstrap = !user && username === bootstrapUser() && !!bootstrapHash();
+  const isBootstrap = !user && username === env.bootstrapUser && env.bootstrapPassword.length >= 12;
   const ok = user
     ? await verifyPassword(password, user.passHash)
     : isBootstrap
-      ? await verifyPassword(password, bootstrapHash())
+      ? (await burnPasswordCheck(password), bootstrapPasswordOk(password))
       : (await burnPasswordCheck(password), false);
   if (!ok) {
     // Count failures for any well-formed username, so lockouts don't reveal which accounts exist.
@@ -166,6 +165,7 @@ export async function startLogin(usernameIn: string, password: string, ip: strin
   if (isBootstrap) {
     const secret = newSecret();
     pending.enroll = encrypt(secret);
+    pending.passHash = await hashPassword(password);
     enroll = { secret, uri: otpauthUri(secret, username) };
     await audit('bootstrap_login', username, ip);
   }
@@ -180,7 +180,7 @@ export async function finishBootstrap(req: Request, code: string, nameIn: string
   const kv = await store();
   const pKey = `pending:${sha256(pendingId)}`;
   const pending = await kv.get<Pending>(pKey);
-  if (!pending?.enroll || pending.expires < now() || pending.tries >= PENDING_MAX_TRIES) {
+  if (!pending?.enroll || !pending.passHash || pending.expires < now() || pending.tries >= PENDING_MAX_TRIES) {
     await kv.del(pKey);
     throw new HttpError(401, 'mfa_expired');
   }
@@ -200,7 +200,7 @@ export async function finishBootstrap(req: Request, code: string, nameIn: string
   const user: User = {
     username: pending.username,
     name,
-    passHash: bootstrapHash(),
+    passHash: pending.passHash,
     totp: pending.enroll,
     lastStep: step,
     recovery: codes.map((c) => keyedHash(normalizeRecovery(c))),
@@ -253,14 +253,14 @@ async function createSession(user: User, ip: string, ua: string) {
   await (await store()).set(`session:${sha256(sid)}`, {
     username: user.username, epoch: user.epoch, created: t, seen: t, ip, ua: ua.slice(0, 160),
   } satisfies Session);
-  return sid;
+  return signSession(sid, Math.floor((t + SESSION_MAX_MS) / 1000));   // cookie value
 }
 export const sessionMaxAge = () => SESSION_MAX_MS / 1000;
 
 /** Returns the signed-in user, or throws 401. Server-side sessions, so sign-out is immediate. */
 export async function requireUser(req: Request) {
-  const sid = readCookies(req)[SESSION_COOKIE];
-  if (!sid || sid.length > 100) throw new HttpError(401, 'signed_out');
+  const sid = verifySessionCookie((readCookies(req)[SESSION_COOKIE] || '').slice(0, 200));
+  if (!sid) throw new HttpError(401, 'signed_out');
   const kv = await store();
   const key = `session:${sha256(sid)}`;
   const s = await kv.get<Session>(key);
@@ -279,7 +279,7 @@ export async function requireUser(req: Request) {
 }
 
 export async function endSession(req: Request) {
-  const sid = readCookies(req)[SESSION_COOKIE];
+  const sid = verifySessionCookie((readCookies(req)[SESSION_COOKIE] || '').slice(0, 200));
   if (sid) await (await store()).del(`session:${sha256(sid)}`);
 }
 

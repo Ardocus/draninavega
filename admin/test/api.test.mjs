@@ -1,28 +1,24 @@
-// End-to-end tests for the portal API against a temp store and a temp copy
-// of src/data. Run: npm test (from admin/).
+// End-to-end tests for the portal API and edge gate against a temp store.
+// Run: npm test (from admin/).
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'nv-admin-'));
-await fs.mkdir(path.join(tmp, 'repo/src/data'), { recursive: true });
-for (const f of ['practice.json', 'settings.json']) {
-  await fs.copyFile(path.join(here, '../../src/data', f), path.join(tmp, 'repo/src/data', f));
-}
 const ORIGIN = 'https://admin.test';
+const EXPORT_TOKEN = randomBytes(32).toString('base64url');
+const BOOT_PW = 'bootstrap test pass 2026';
 Object.assign(process.env, {
   ADMIN_LOCAL: '1', ADMIN_ORIGIN: ORIGIN, ADMIN_LOCAL_STORE: path.join(tmp, 'store'),
-  ADMIN_LOCAL_REPO: path.join(tmp, 'repo'), DATA_KEY: randomBytes(32).toString('base64'),
+  SESSION_SECRET: randomBytes(32).toString('base64url'), EXPORT_TOKEN, BOOTSTRAP_PASSWORD: BOOT_PW,
   SETUP_CODE: 'test-setup-code-0123456789',
 });
-const BOOT_PW = 'bootstrap test pass 2026';
-process.env.BOOTSTRAP_PASSWORD_HASH = await (await import('../server/crypto.mts')).hashPassword(BOOT_PW);
+globalThis.Netlify = { env: { get: (k) => process.env[k] } };
 const { default: api } = await import('../netlify/functions/api.mts');
+const { default: gate } = await import('../netlify/edge-functions/gate.js');
 const { hotp, base32Decode, currentStep } = await import('../server/totp.mts');
 
 // ── tiny client with a cookie jar ──
@@ -130,13 +126,13 @@ test('publishing validates, strips unknown keys and keeps crisis lines', async (
   const { body } = await c('GET', '/api/content');
   const draft = structuredClone(body);
 
-  // Invalid input → 422 with field paths, nothing written.
+  // Invalid input → 422 with field paths, nothing saved.
   const bad = structuredClone(draft);
   bad.practice.phone_display = '123';
   bad.settings.facebook_url = 'javascript:alert(1)';
   bad.settings.insurance.push('MCS Life');
-  bad.practice.tagline.es = 'Hola\u0007';
-  const r1 = await c('POST', '/api/content', { ...bad, versions: body.versions });
+  bad.practice.tagline.es = `Hola${String.fromCharCode(7)}`;
+  const r1 = await c('POST', '/api/content', { ...bad, version: body.version });
   assert.equal(r1.status, 422);
   const paths = r1.body.issues.map((i) => i.path);
   for (const p of ['practice.phone_display', 'settings.facebook_url', 'settings.insurance', 'practice.tagline.es']) assert.ok(paths.includes(p), p);
@@ -148,20 +144,63 @@ test('publishing validates, strips unknown keys and keeps crisis lines', async (
   good.practice.crisis_lines = [];
   good.practice.evil = '<script>';
   good.settings.announcement = { enabled: true, es: 'Cerrado </script><script>alert(1)</script>', en: 'Closed', start: '', end: '' };
-  const r2 = await c('POST', '/api/content', { ...good, versions: body.versions, extra: 1 });
+  const r2 = await c('POST', '/api/content', { ...good, version: body.version, extra: 1 });
   assert.equal(r2.status, 200, JSON.stringify(r2.body));
-  const written = JSON.parse(await fs.readFile(path.join(tmp, 'repo/src/data/practice.json'), 'utf8'));
-  const settings = JSON.parse(await fs.readFile(path.join(tmp, 'repo/src/data/settings.json'), 'utf8'));
-  assert.equal(written.crisis_lines.length, 2, 'crisis lines must be preserved');
-  assert.equal(written.evil, undefined);
-  assert.equal(written.phone, '+17878487646');
-  assert.ok(settings.insurance.includes('Plan Vital'));
+  assert.equal(r2.body.version, body.version + 1);
 
-  // A different edit made from the stale snapshot → 409, not a silent overwrite.
+  // What the public build would receive.
+  const ex = await api(new Request(`${ORIGIN}/api/export`, { headers: { authorization: `Bearer ${EXPORT_TOKEN}` } }), { ip: '1.1.1.1' });
+  const exported = await ex.json();
+  assert.equal(exported.practice.crisis_lines.length, 2, 'crisis lines must be preserved');
+  assert.equal(exported.practice.evil, undefined);
+  assert.equal(exported.practice.phone, '+17878487646');
+  assert.ok(exported.settings.insurance.includes('Plan Vital'));
+  assert.equal(exported.version, body.version + 1);
+
+  // A different edit made from the stale version → 409, not a silent overwrite.
   const stale = structuredClone(good);
   stale.settings.insurance.push('Otro plan');
-  const r3 = await c('POST', '/api/content', { ...stale, versions: body.versions });
+  const r3 = await c('POST', '/api/content', { ...stale, version: body.version });
   assert.equal(r3.status, 409);
+});
+
+test('export needs the exact EXPORT_TOKEN', async () => {
+  const call = (auth) => api(new Request(`${ORIGIN}/api/export`, { headers: auth ? { authorization: auth } : {} }), { ip: '1.1.1.2' });
+  assert.equal((await call()).status, 401);
+  assert.equal((await call(`Bearer ${EXPORT_TOKEN}x`)).status, 401);
+  assert.equal((await call(`Bearer ${EXPORT_TOKEN.slice(1)}`)).status, 401);
+  assert.equal((await call(`Bearer ${EXPORT_TOKEN}`)).status, 200);
+});
+
+test('edge gate: sign-in page is open, everything private needs a valid signed cookie', async () => {
+  const PASS = Symbol('next');
+  const run = async (p, cookie) => {
+    const r = await gate(new Request(`${ORIGIN}${p}`, { headers: cookie ? { cookie } : {} }), { next: () => PASS });
+    return r === PASS ? 'pass' : r.status;
+  };
+  for (const p of ['/', '/assets/main.js', '/assets/auth.js', '/fonts/marcellus-latin-400.woff2', '/api/login', '/api/export']) {
+    assert.equal(await run(p), 'pass', p);
+  }
+  assert.equal(await run('/app/portal.js'), 302);
+  assert.equal(await run('/api/content'), 401);
+  assert.equal(await run('/secret-probe'), 302);
+
+  // A real session cookie passes; a tampered or forged one doesn't.
+  const c = client('10.0.3.1');
+  await c('POST', '/api/login', { username: 'dranvega', password: PASSWORD });
+  const ok = await c('POST', '/api/login/code', { code: recovery[4] });
+  const value = ok.cookies.find((x) => x.startsWith('__Host-nv_session=')).split(';')[0].split('=')[1];
+  assert.equal(await run('/app/portal.js', `__Host-nv_session=${value}`), 'pass');
+  const [sid, exp, sig] = value.split('.');
+  assert.equal(await run('/app/portal.js', `__Host-nv_session=${sid}.${Number(exp) + 3600}.${sig}`), 302, 'extended expiry');
+  assert.equal(await run('/app/portal.js', `__Host-nv_session=x${sid.slice(1)}.${exp}.${sig}`), 302, 'other session id');
+  assert.equal(await run('/api/content', `__Host-nv_session=${sid}`), 401, 'unsigned');
+
+  // Misconfigured (no SESSION_SECRET) fails closed.
+  const saved = process.env.SESSION_SECRET;
+  process.env.SESSION_SECRET = '';
+  assert.equal(await run('/app/portal.js', `__Host-nv_session=${value}`), 302);
+  process.env.SESSION_SECRET = saved;
 });
 
 test('moving the authenticator to a new phone (password + current code, then new code)', async () => {
@@ -217,6 +256,7 @@ test('session cookie value is not stored in plain text', async () => {
   assert.ok(sessions.length > 0);
   const user = JSON.parse(await fs.readFile(path.join(tmp, 'store', `${encodeURIComponent('user:dranvega')}.json`), 'utf8'));
   assert.ok(!user.totp.includes(secret), 'TOTP secret must be encrypted at rest');
+  assert.ok(!JSON.stringify(user).includes(BOOT_PW));
   assert.match(user.passHash, /^scrypt\$131072\$8\$1\$/);
 });
 

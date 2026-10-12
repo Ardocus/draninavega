@@ -4,11 +4,6 @@
 // must not change (crisis lines, country) are carried over from the repo.
 import { HttpError } from './http.mts';
 
-export const DATA_FILES = {
-  practice: 'src/data/practice.json',
-  settings: 'src/data/settings.json',
-} as const;
-
 /** C0/C1 control characters (built from code points to keep the source plain ASCII). */
 const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`);
 
@@ -200,4 +195,3 @@ export function changedPaths(a: unknown, b: unknown, prefix = ''): string[] {
   return [prefix];
 }
 
-export const serialize = (o: unknown) => `${JSON.stringify(o, null, 2)}\n`;

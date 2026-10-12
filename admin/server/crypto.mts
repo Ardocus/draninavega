@@ -1,6 +1,6 @@
 import {
   scrypt as scryptCb, randomBytes, createHash, createHmac, timingSafeEqual,
-  createCipheriv, createDecipheriv, randomInt,
+  createCipheriv, createDecipheriv, randomInt, hkdfSync,
 } from 'node:crypto';
 import { env } from './env.mts';
 
@@ -52,16 +52,17 @@ export function recoveryCodes(count = 10) {
 }
 export const normalizeRecovery = (c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-/** Keyed hash (HMAC-SHA256 with DATA_KEY): stored recovery codes can't be brute-forced offline from a store leak alone. */
-export const keyedHash = (s: string) => createHmac('sha256', Buffer.from(env.dataKey, 'base64')).update(s).digest('hex');
+// ── Keys derived from SESSION_SECRET (HKDF, one key per purpose) ─────────
+const derive = (purpose: string) => Buffer.from(hkdfSync('sha256', env.sessionSecret, 'draninavega-admin', purpose, 32));
+
+/** Keyed hash for recovery codes: a copy of the store alone can't brute-force them offline. */
+export const keyedHash = (s: string) => createHmac('sha256', derive('recovery-v1')).update(s).digest('hex');
 
 // AES-256-GCM for authenticator secrets at rest. A leak of the Blobs store
 // alone doesn't let anyone generate login codes.
-const key = () => Buffer.from(env.dataKey, 'base64');
-
 export function encrypt(plain: string) {
   const iv = randomBytes(12);
-  const c = createCipheriv('aes-256-gcm', key(), iv);
+  const c = createCipheriv('aes-256-gcm', derive('totp-v1'), iv);
   const ct = Buffer.concat([c.update(plain, 'utf8'), c.final()]);
   return ['v1', iv.toString('base64url'), c.getAuthTag().toString('base64url'), ct.toString('base64url')].join('.');
 }
@@ -69,7 +70,24 @@ export function encrypt(plain: string) {
 export function decrypt(box: string) {
   const [v, iv, tag, ct] = box.split('.');
   if (v !== 'v1') throw new Error('bad ciphertext version');
-  const d = createDecipheriv('aes-256-gcm', key(), Buffer.from(iv, 'base64url'));
+  const d = createDecipheriv('aes-256-gcm', derive('totp-v1'), Buffer.from(iv, 'base64url'));
   d.setAuthTag(Buffer.from(tag, 'base64url'));
   return Buffer.concat([d.update(Buffer.from(ct, 'base64url')), d.final()]).toString('utf8');
+}
+
+// ── Signed session cookie value: "<sid>.<exp>.<sig>" ─────────────────────
+// The edge gate (netlify/edge-functions/gate.js) verifies the same HMAC
+// before serving anything private; the API then also checks the session
+// record in the store (idle timeout, sign-out, epoch).
+const cookieSig = (sid: string, exp: number) =>
+  createHmac('sha256', env.sessionSecret).update(`nv-session:${sid}:${exp}`).digest('base64url');
+
+export const signSession = (sid: string, exp: number) => `${sid}.${exp}.${cookieSig(sid, exp)}`;
+
+/** Returns the session id if the signature and expiry are valid, else null. */
+export function verifySessionCookie(value: string): string | null {
+  const [sid, expStr, sig] = (value || '').split('.');
+  const exp = Number(expStr);
+  if (!sid || !sig || !Number.isFinite(exp) || exp < Date.now() / 1000) return null;
+  return safeEqual(sig, cookieSig(sid, exp)) ? sid : null;
 }

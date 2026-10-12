@@ -1,11 +1,14 @@
 # Admin portal: admin.draninavega.com
 # Separate Netlify project, same repo. In Netlify set Base directory = "admin".
+# Env vars: run `node scripts/make-secrets.mjs` at the repo root.
 
 [build]
   publish = "public"
+  functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
+  # No build step: plain HTML/CSS/JS. Netlify still installs package.json deps for the functions.
   command = "echo 'static portal, nothing to build'"
-  # Only redeploy the portal when files under admin/ change
-  # (the portal's own content commits to src/data must not redeploy it).
+  # Only redeploy the portal when files under admin/ change.
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
 
 [build.environment]

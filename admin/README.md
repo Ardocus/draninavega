@@ -1,10 +1,20 @@
 # Portal administrativo — admin.draninavega.com
 
-A private portal where Dra. Vega updates her website herself. Login screens in Spanish or English (toggle), editor in Spanish; password + authenticator-app login; no source code involved.
+A private portal where Dra. Vega updates her website herself. Sign-in screens in Spanish or English (toggle), editor in Spanish; password + authenticator-app login; no source code involved.
 
-**How it works.** She edits fields → the portal's server function validates everything → it commits `src/data/practice.json` / `src/data/settings.json` to GitHub in one commit → Netlify rebuilds draninavega.com (~1–2 min) → the portal shows "Sus cambios ya están en la página".
+**How it works** (same pattern as the Wizarding World workspace):
 
-It's a **separate Netlify project** built from this same repo (base directory `admin`). The public site never contains admin code, and the portal's secrets exist only in this project.
+```
+ admin.draninavega.com (this folder)                 draninavega.com (repo root)
+┌──────────────────────────────────┐  build hook   ┌──────────────────────────────┐
+│ edge gate ─ sign-in ─ editor     │ ────────────▶ │ scripts/fetch-content.mjs     │
+│ /api (function)                  │               │  GET /api/export (EXPORT_TOKEN)│
+│ Netlify Blobs: content, users,   │ ◀──────────── │  shape check, fail closed      │
+│   sessions, activity log         │  EXPORT_TOKEN │ astro build → static site      │
+└──────────────────────────────────┘               └──────────────────────────────┘
+```
+
+She edits → **Publicar** saves a new content version in Blobs (last 20 kept) and calls the public site's build hook → the public build fetches `/api/export` → ~1–2 min later the portal shows "Sus cambios ya están en la página". Nothing in this project can change the site's code: there is no GitHub token.
 
 | What she can change | Notes |
 | --- | --- |
@@ -21,66 +31,54 @@ Locked on purpose: the crisis-line block (988 / Línea PAS) and the page layout/
 
 ---
 
-## One-time setup (Angel)
+## Setup
 
-### 1. GitHub token
-GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate:
-- Resource owner: `Ardocus` · Repository access: **Only select repositories → `Ardocus/draninavega`**
-- Permissions → Repository → **Contents: Read and write** (Metadata: read is added automatically). Nothing else.
-- Expiration: 1 year. Put a calendar reminder to rotate it.
-
-### 2. Generate the secrets
+### 1. Generate the values
+At the repo root:
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+node scripts/make-secrets.mjs
 ```
-↑ `DATA_KEY` (encrypts authenticator secrets; keep a copy in your password manager — losing it means re-enrolling).
+It prints every variable for **both** Netlify projects (nothing is written to disk). Keep the terminal open while you paste. Save `SESSION_SECRET` in your password manager.
 
-```bash
-cd admin
-npm install
-npm run hash-password
-```
-↑ type the bootstrap password and press Enter. The output (`scrypt$131072$8$1$…`) is `BOOTSTRAP_PASSWORD_HASH`. The password itself is never stored anywhere — not in the repo (which is public), not in Netlify.
+### 2. Admin project (Netlify)
+*Add new project → Import an existing project → GitHub → `Ardocus/draninavega`* → **Base directory: `admin`** → Deploy.
 
-### 3. Create the Netlify project
-Netlify → **Add new project → Import an existing project → GitHub → `Ardocus/draninavega`**:
-- **Base directory: `admin`** (everything else comes from `admin/netlify.toml`)
-- Project name e.g. `draninavega-admin`
+**Environment variables** (Project configuration → Environment variables). Scope: **Functions** if offered; tick *Contains secret values* on the secrets:
 
-**Environment variables** (Project configuration → Environment variables). Scope: **Functions**; deploy context: **Production** only; tick *Contains secret values* for the first three:
+| Key | Value | Secret |
+| --- | --- | --- |
+| `SESSION_SECRET` | from make-secrets | ✅ |
+| `EXPORT_TOKEN` | from make-secrets | ✅ |
+| `BOOTSTRAP_PASSWORD` | the first-sign-in password you chose (12+ characters) | ✅ |
+| `ADMIN_ORIGIN` | `https://admin.draninavega.com` (no trailing slash) | |
+| `PUBLIC_SITE_URL` | `https://draninavega.com` | |
+| `PUBLIC_BUILD_HOOK` | step 3 | ✅ |
 
-| Key | Value |
-| --- | --- |
-| `GITHUB_TOKEN` | token from step 1 |
-| `DATA_KEY` | from step 2 |
-| `BOOTSTRAP_PASSWORD_HASH` | from step 2 |
-| `BOOTSTRAP_USER` | `admin` (optional; this is the default) |
-| `ADMIN_ORIGIN` | `https://admin.draninavega.com` |
-| `PUBLIC_SITE_URL` | `https://draninavega.com` |
-| `GITHUB_REPO` | `Ardocus/draninavega` |
-| `GITHUB_BRANCH` | `main` |
+`BOOTSTRAP_USER` is optional (default `admin`).
 
-`SETUP_CODE` is **not** needed for the first account; it's only for resets or extra accounts (see below).
+**Turn off previews** (Project configuration → Build & deploy → Branches and deploy contexts): Branch deploys **None**, Deploy previews **None**, so preview URLs never run with these secrets.
 
-**Turn off previews** (Project configuration → Build & deploy → Branches and deploy contexts): Branch deploys **None**, Deploy previews **None**. Preview URLs would otherwise run the functions with production secrets.
+**Domain:** Domain management → Add a domain → `admin.draninavega.com`.
 
-**Domain:** Domain management → Add a domain → `admin.draninavega.com`. With Netlify DNS it's automatic; otherwise add a `CNAME admin → <project>.netlify.app` at the registrar. HTTPS is provisioned automatically.
+### 3. Connect the two projects
+1. **Public** project → Project configuration → Build & deploy → **Build hooks** → *Add build hook* (name: `admin portal`, branch: `main`) → copy the URL.
+2. **Admin** project → add `PUBLIC_BUILD_HOOK` = that URL.
+3. **Public** project → environment variables: `ADMIN_EXPORT_URL` = `https://admin.draninavega.com/api/export`, `EXPORT_TOKEN` = the same value as the admin project (secret).
+4. Redeploy both (Deploys → Trigger deploy).
 
-Deploy (Deploys → Trigger deploy).
+Until step 3 is done the public site simply builds from the committed `src/data` files.
 
-### 4. First sign-in (do it right after deploying, ~5 minutes)
-Until this is done, the `admin` account is protected by the password only — whoever signs in first enrolls their phone. So do it immediately, together with the doctor:
-1. She installs **Google Authenticator** or **Microsoft Authenticator** on her phone.
-2. Open `https://admin.draninavega.com`, choose Español/English (top right), sign in as **`admin`** with the bootstrap password.
-3. The portal goes straight to *Conecte su teléfono*: enter her name, scan the QR, type the 6-digit code.
+### 4. First sign-in (do it right after deploying)
+Until this is done, `admin` is protected by the password only — whoever signs in first enrolls their phone. So do it immediately, together with the doctor:
+1. She installs **Google Authenticator** or **Microsoft Authenticator**.
+2. Open `https://admin.draninavega.com` (not the `.netlify.app` address — sign-in only works on `ADMIN_ORIGIN`), pick Español/English, sign in as **`admin`** with the bootstrap password.
+3. *Conecte su teléfono*: her name, scan the QR, type the 6-digit code.
 4. **Save the 10 recovery codes** (download/print; keep them away from the phone).
-5. Recommended: Seguridad → *Contraseña* → change the password (the bootstrap one has been shared in chat/messages).
-
-### 5. Close the bootstrap
-Delete `BOOTSTRAP_PASSWORD_HASH` from the environment variables and redeploy. (It's already inert once the `admin` account exists — the stored account always wins — but removing it is tidier.) Check *Actividad*: you should see exactly one `Cuenta creada` from your own IP.
+5. Seguridad → *Contraseña* → change the password.
+6. Delete `BOOTSTRAP_PASSWORD` from the admin project and redeploy. Check *Actividad*: exactly one `Cuenta creada`.
 
 ### Extra accounts (optional)
-To add an account for yourself: set `SETUP_CODE` (`node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"`), redeploy, open `#configurar`, then delete `SETUP_CODE` and redeploy.
+Set `SETUP_CODE` (`node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"`), redeploy, open `#configurar`, then delete `SETUP_CODE` and redeploy.
 
 ---
 
@@ -88,32 +86,38 @@ To add an account for yourself: set `SETUP_CODE` (`node -e "console.log(require(
 
 | Situation | Fix |
 | --- | --- |
-| New phone | She does it herself: Seguridad → **Cambiar de teléfono** (password + a code from the old phone or a recovery code, then scan the new QR). |
-| Lost phone **and** recovery codes | Set `SETUP_CODE` (new value) **and** `SETUP_ALLOW_RESET=1`, redeploy, run `#configurar` with the **same username**, then delete both variables and redeploy. All old sessions are signed out. |
-| Forgot password | Same as above (reset). |
-| Account locked | Too many wrong attempts: wait 15 minutes (doubles on repeat, max 4 h). |
-| "No se pudo publicar" | Usually an expired/revoked `GITHUB_TOKEN`. Check the Functions log in Netlify. |
-| Suspicious activity in *Actividad* | Seguridad → *Cerrar todas las sesiones*, change password; rotate `GITHUB_TOKEN`. |
+| "No hay conexión" on `localhost:8888` | That's the local dev server; start it with `npm run dev`. The real portal is `admin.draninavega.com`. |
+| Sign-in refused on the `.netlify.app` address | Expected: writes must come from `ADMIN_ORIGIN`. Use `admin.draninavega.com`. |
+| `/api/session` returns `server_error` | `SESSION_SECRET` missing or shorter than 32 characters. |
+| "Guardado, pero la página pública no se pudo actualizar" | `PUBLIC_BUILD_HOOK` missing/wrong. Fix it, then trigger a deploy of the public project. |
+| Public build fails at `fetch-content` | `EXPORT_TOKEN` differs between the projects, or `ADMIN_EXPORT_URL` is wrong. The live site stays as it was. |
+| New phone | She does it herself: Seguridad → **Cambiar de teléfono**. |
+| Lost phone **and** recovery codes, or forgot password | Set `SETUP_CODE` and `SETUP_ALLOW_RESET=1`, redeploy, run `#configurar` with the **same username**, then delete both and redeploy. |
+| Account locked | Wait 15 minutes (doubles on repeat, max 4 h). |
+| Suspicious activity in *Actividad* | Seguridad → *Cerrar todas las sesiones*, change password, rotate `EXPORT_TOKEN`. |
+
+**Rotating `SESSION_SECRET`** signs everyone out and makes stored authenticator secrets and recovery codes unreadable → the account must be reset (row above). Only rotate if it leaked.
 
 ## Local development
 ```bash
 cd admin
 npm install
 npm run dev     # http://localhost:8888 · setup code: local-dev-setup-code
-npm test        # API security tests
-npm run hash-password   # make a BOOTSTRAP_PASSWORD_HASH
+npm test        # API + edge gate security tests
 ```
-Local mode stores accounts in `admin/.local-store/` (git-ignored; put a hash in `.local-store/_bootstrap_hash` to try the bootstrap login) and edits `../src/data/*.json` directly, so you can preview with `npm run dev` in the root.
+Local mode keeps everything in `admin/.local-store/` (git-ignored). Put a password in `.local-store/_bootstrap_password` to try the `admin` first sign-in. The dev server prints the command to build the public site from the local portal's content.
 
 ## Files
 | File | Purpose |
 | --- | --- |
-| `netlify/functions/api.mts` | API router (`/api/*`) |
-| `server/auth.mts` | Accounts, login + 2FA, sessions, rate limits, recovery codes, setup, activity log |
+| `netlify/edge-functions/gate.js` | Edge gate: only the sign-in page/APIs are served without a valid signed session |
+| `netlify/functions/api.mts` | API router (`/api/*`), including `/api/export` for the public build |
+| `server/auth.mts` | Accounts, login + 2FA, bootstrap, sessions, rate limits, recovery codes, setup, activity log |
 | `server/content.mts` | Server-side schema/validation for everything she can edit |
-| `server/repo.mts` | GitHub read + single-commit publish; deploy status |
-| `server/crypto.mts`, `server/totp.mts` | scrypt, AES-GCM, HMAC, RFC 6238 TOTP (Node built-ins only) |
-| `public/` | The portal UI (vanilla JS, no third-party code) |
+| `server/content-store.mts` | Content versions in Blobs, build hook, deploy status |
+| `server/crypto.mts`, `server/totp.mts` | scrypt, HKDF/AES-GCM/HMAC from `SESSION_SECRET`, signed cookies, RFC 6238 TOTP |
+| `public/assets/` | Sign-in screens (open): `main.js`, `core.js`, `auth.js`, `app.css` |
+| `public/app/portal.js` | The editor, Seguridad, Actividad (gated) |
 | `test/api.test.mjs` | End-to-end security tests |
 
 See `../SECURITY.md` for the security review.

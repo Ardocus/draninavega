@@ -23,7 +23,7 @@ npm run preview    # serves dist/
 | What | File |
 | --- | --- |
 | Confirmed practice facts (name, address, phones, specialties) | `src/data/practice.json` |
-| Office-editable toggles (§8): new patients, insurance, WhatsApp, fax, Facebook, announcement | `src/data/settings.json` |
+| Office-editable toggles (§8): new patients, insurance, WhatsApp, fax, Facebook, announcement | `src/data/settings.json` (initial values; live values come from the portal) |
 | All UI copy, per language | `src/i18n/es.json`, `src/i18n/en.json` |
 | Design tokens and layout | `src/styles/global.css` |
 | Page sections | `src/components/Home.astro` |
@@ -46,9 +46,9 @@ npm run preview    # serves dist/
 
 ## Admin portal (`admin.draninavega.com`)
 
-Dra. Vega updates the site herself through a private portal with two-factor login. It's a **second Netlify project** built from the `admin/` folder of this repo; each publish commits `src/data/*.json` and this site rebuilds in 1–2 minutes. Setup, environment variables and recovery steps: **[admin/README.md](admin/README.md)**. Security review: **[SECURITY.md](SECURITY.md)**.
+Dra. Vega updates the site herself through a private portal with two-factor login. It's a **second Netlify project** built from the `admin/` folder of this repo. Her content lives in the portal (Netlify Blobs); publishing calls this project's **build hook**, and the build pulls the content from the portal's `/api/export` (`scripts/fetch-content.mjs`, fails closed). Setup, environment variables and recovery steps: **[admin/README.md](admin/README.md)**. All env values: `node scripts/make-secrets.mjs`. Security review: **[SECURITY.md](SECURITY.md)**.
 
-Commits that only touch `admin/` or docs don't rebuild the public site, and the portal's data commits don't redeploy the portal (`ignore` rules in each `netlify.toml`).
+Git pushes that only touch `admin/` or docs don't rebuild the public site; build-hook builds always run (`ignore` rules in each `netlify.toml`). Without `ADMIN_EXPORT_URL` set, the public build uses the committed `src/data` files.
 
 ## Before launch — confirm with Dra. Vega (DEV-HANDOFF §3)
 

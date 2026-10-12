@@ -1,30 +1,29 @@
 // Configuration comes only from Netlify environment variables (admin project).
-// See admin/README.md for what each one is and how to generate it.
+// `node ../scripts/make-secrets.mjs` prints every value; admin/README.md explains them.
 
 const read = (k: string) => (process.env[k] || '').trim();
 
 export const env = {
-  /** Local development: file-backed store and repo (admin/dev-server.mjs sets this). */
+  /** Local development: file-backed store (admin/dev-server.mjs sets this). */
   get local() { return read('ADMIN_LOCAL') === '1'; },
   /** Exact origin the portal is served from. State-changing requests must come from it. */
   get origin() { return read('ADMIN_ORIGIN') || 'https://admin.draninavega.com'; },
   /** Public site, used to check whether a published change is live. */
   get publicSite() { return read('PUBLIC_SITE_URL') || 'https://draninavega.com'; },
-  get repo() { return read('GITHUB_REPO') || 'Ardocus/draninavega'; },
-  get branch() { return read('GITHUB_BRANCH') || 'main'; },
-  /** Fine-grained token: this repo only, Contents read/write. */
-  get githubToken() { return read('GITHUB_TOKEN'); },
-  /** 32 random bytes, base64. Encrypts authenticator secrets at rest. */
-  get dataKey() { return read('DATA_KEY'); },
-  /** Enables first-time setup / account reset while set. Remove it afterwards. */
+  /** 32+ random chars. Signs session cookies and derives the at-rest encryption keys. */
+  get sessionSecret() { return read('SESSION_SECRET'); },
+  /** 32+ random chars, shared with the public project. Lets its build read /api/export. */
+  get exportToken() { return read('EXPORT_TOKEN'); },
+  /** Public project → Build hooks. Called after every publish. */
+  get buildHook() { return read('PUBLIC_BUILD_HOOK'); },
+  /** First sign-in only: username + password, until that account exists in the store. */
+  get bootstrapUser() { return (read('BOOTSTRAP_USER') || 'admin').toLowerCase(); },
+  get bootstrapPassword() { return process.env.BOOTSTRAP_PASSWORD || ''; },
+  /** Enables /#configurar (extra accounts / resets) while set. Remove it afterwards. */
   get setupCode() { return read('SETUP_CODE'); },
 };
 
-/** Fail closed if the deployment is missing secrets. */
+/** Fail closed if the deployment is missing its core secret. */
 export function assertConfigured() {
-  const missing: string[] = [];
-  const key = Buffer.from(env.dataKey, 'base64');
-  if (key.length !== 32) missing.push('DATA_KEY');
-  if (!env.local && !env.githubToken) missing.push('GITHUB_TOKEN');
-  if (missing.length) throw new Error(`Admin portal misconfigured: ${missing.join(', ')}`);
+  if (env.sessionSecret.length < 32) throw new Error('Admin portal misconfigured: SESSION_SECRET (32+ characters)');
 }

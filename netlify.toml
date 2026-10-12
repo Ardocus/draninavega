@@ -1,11 +1,15 @@
 # Public site: draninavega.com
 # (The admin portal is a separate Netlify project with base directory "admin"; see admin/netlify.toml.)
+# Env vars (this project): ADMIN_EXPORT_URL, EXPORT_TOKEN. Run `node scripts/make-secrets.mjs`.
+# Content comes from the portal at build time (scripts/fetch-content.mjs); publishing in the
+# portal triggers this project's build hook.
 
 [build]
   command = "npm run build"
   publish = "dist"
-  # Skip the build when a commit only touches the admin portal or docs.
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)admin' ':(exclude)*.md'"
+  # Git pushes that only touch the admin portal or docs skip the build.
+  # Build-hook builds (the portal publishing) always run: INCOMING_HOOK_URL is set for those.
+  ignore = "[ -z \"$INCOMING_HOOK_URL\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)admin' ':(exclude)*.md'"
 
 [build.environment]
   NODE_VERSION = "22"

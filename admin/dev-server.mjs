@@ -1,6 +1,9 @@
-// Local development server for the admin portal: static files + the API
-// function, with a file-backed store and the repo's own src/data files.
+// Local development server for the admin portal: the edge gate, static files
+// and the API function, with a file-backed store in admin/.local-store/.
 // Run: npm run dev  →  http://localhost:8888
+//
+// Optional local bootstrap account: put a password in .local-store/_bootstrap_password
+// (git-ignored), then sign in as "admin".
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -13,51 +16,62 @@ const storeDir = path.join(root, '.local-store');
 await fs.mkdir(storeDir, { recursive: true });
 
 // Local-only secrets, generated once and kept out of git (.local-store is ignored).
-const keyFile = path.join(storeDir, '_dev_key');
-let devKey;
-try { devKey = await fs.readFile(keyFile, 'utf8'); } catch {
-  devKey = randomBytes(32).toString('base64');
-  await fs.writeFile(keyFile, devKey);
+async function localSecret(name, make) {
+  const file = path.join(storeDir, name);
+  try { return (await fs.readFile(file, 'utf8')).trim(); } catch {
+    const v = make();
+    if (v) await fs.writeFile(file, v);
+    return v;
+  }
 }
 Object.assign(process.env, {
   ADMIN_LOCAL: '1',
   ADMIN_ORIGIN: `http://localhost:${PORT}`,
   ADMIN_LOCAL_STORE: storeDir,
-  ADMIN_LOCAL_REPO: path.resolve(root, '..'),
-  DATA_KEY: process.env.DATA_KEY || devKey,
+  SESSION_SECRET: process.env.SESSION_SECRET || await localSecret('_session_secret', () => randomBytes(32).toString('base64url')),
+  EXPORT_TOKEN: process.env.EXPORT_TOKEN || await localSecret('_export_token', () => randomBytes(32).toString('base64url')),
+  BOOTSTRAP_PASSWORD: process.env.BOOTSTRAP_PASSWORD || await localSecret('_bootstrap_password', () => ''),
   SETUP_CODE: process.env.SETUP_CODE ?? 'local-dev-setup-code',
 });
 
-// Optional local bootstrap account: put a hash from `npm run hash-password` in .local-store/_bootstrap_hash
-try { process.env.BOOTSTRAP_PASSWORD_HASH ||= (await fs.readFile(path.join(storeDir, '_bootstrap_hash'), 'utf8')).trim(); } catch { /* none */ }
-
+// The edge gate reads env through the Netlify global, as it does at the edge.
+globalThis.Netlify = { env: { get: (k) => process.env[k] } };
+const { default: gate } = await import('./netlify/edge-functions/gate.js');
 const { default: api } = await import('./netlify/functions/api.mts');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.png': 'image/png', '.txt': 'text/plain' };
+const PASS = Symbol('next');
+
+async function send(res, r) {
+  const cookies = r.headers.getSetCookie();
+  if (cookies.length) res.setHeader('set-cookie', cookies);
+  res.writeHead(r.status, Object.fromEntries([...r.headers].filter(([k]) => k !== 'set-cookie')));
+  res.end(Buffer.from(await r.arrayBuffer()));
+}
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
-  if (url.pathname.startsWith('/api/')) {
-    const chunks = [];
-    for await (const c of req) chunks.push(c);
-    const body = ['GET', 'HEAD'].includes(req.method) ? undefined : Buffer.concat(chunks);
-    const r = await api(new Request(url, { method: req.method, headers: req.headers, body }), { ip: req.socket.remoteAddress });
-    const cookies = r.headers.getSetCookie();
-    if (cookies.length) res.setHeader('set-cookie', cookies);
-    res.writeHead(r.status, Object.fromEntries([...r.headers].filter(([k]) => k !== 'set-cookie')));
-    res.end(Buffer.from(await r.arrayBuffer()));
-    return;
-  }
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  const body = ['GET', 'HEAD'].includes(req.method) ? undefined : Buffer.concat(chunks);
+  const request = () => new Request(url, { method: req.method, headers: req.headers, body });
+
+  const gated = await gate(request(), { next: () => PASS });
+  if (gated !== PASS) return send(res, gated);
+
+  if (url.pathname.startsWith('/api/')) return send(res, await api(request(), { ip: req.socket.remoteAddress }));
+
   const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
   const file = path.join(root, 'public', path.normalize(rel));
   if (!file.startsWith(path.join(root, 'public'))) { res.writeHead(403).end(); return; }
   try {
     const data = await fs.readFile(file);
-    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' }).end(data);
+    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' }).end(data);
   } catch {
     res.writeHead(404).end('Not found');
   }
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`Admin portal (local): http://localhost:${PORT}`);
   console.log(`Setup code: ${process.env.SETUP_CODE || '(disabled)'}`);
-  console.log('Edits write to ../src/data/*.json');
+  console.log(`Bootstrap "admin" login: ${process.env.BOOTSTRAP_PASSWORD ? 'enabled' : 'off (.local-store/_bootstrap_password)'}`);
+  console.log(`Preview the public site with portal content (repo root):\n  ADMIN_EXPORT_URL=http://localhost:${PORT}/api/export EXPORT_TOKEN=$(cat admin/.local-store/_export_token) npm run build`);
 });

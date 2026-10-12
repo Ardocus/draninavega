@@ -1,5 +1,5 @@
 // Admin portal API. One function, routed by path.
-import { assertConfigured } from '../../server/env.mts';
+import { assertConfigured, env } from '../../server/env.mts';
 import {
   HttpError, json, readJson, assertSameOrigin, str, cookie, clearCookie, SESSION_COOKIE, PENDING_COOKIE,
 } from '../../server/http.mts';
@@ -7,13 +7,15 @@ import {
   startLogin, finishLogin, finishBootstrap, requireUser, endSession, sessionMaxAge, changePassword, regenerateRecovery,
   signOutEverywhere, startPhoneChange, finishPhoneChange, setupEnabled, startSetup, finishSetup, audit, readAudit,
 } from '../../server/auth.mts';
-import { validate, toClient, changedPaths, serialize } from '../../server/content.mts';
-import { load, publish, isLive } from '../../server/repo.mts';
-import { store } from '../../server/store.mts';
+import { validate, toClient, changedPaths } from '../../server/content.mts';
+import { loadContent, saveContent, requestPublicBuild, deployedVersion, type Content } from '../../server/content-store.mts';
+import { safeEqual } from '../../server/crypto.mts';
 import { qrSvg } from '../../server/qr.mts';
 
 interface Ctx { ip?: string }
 type Handler = (req: Request, ip: string, ua: string) => Promise<Response>;
+
+const lastPublish = (c: Content) => (c.updatedAt ? { at: c.updatedAt, by: c.updatedBy } : null);
 
 const routes: Record<string, Handler> = {
   'GET /api/session': async (req) => {
@@ -62,39 +64,43 @@ const routes: Record<string, Handler> = {
 
   'GET /api/content': async (req) => {
     await requireUser(req);
-    const snap = await load();
-    const last = await (await store()).get<{ sha: string; at: string; by: string }>('lastPublish');
-    return json({ ...toClient(snap.practice, snap.settings), versions: snap.versions, lastPublish: last });
+    const c = await loadContent();
+    return json({ ...toClient(c.practice, c.settings), version: c.version, lastPublish: lastPublish(c) });
   },
 
   'POST /api/content': async (req, ip) => {
     const { user } = await requireUser(req);
     const b = await readJson(req);
-    const versions = (b.versions || {}) as Record<'practice' | 'settings', string>;
-    const current = await load();
+    const current = await loadContent();
     const next = validate(b, current);
-
-    const files: { practice?: string; settings?: string } = {};
     const changed = [
       ...changedPaths(current.practice, next.practice, 'practice'),
       ...changedPaths(current.settings, next.settings, 'settings'),
     ];
-    if (changed.some((p) => p.startsWith('practice'))) files.practice = serialize(next.practice);
-    if (changed.some((p) => p.startsWith('settings'))) files.settings = serialize(next.settings);
     if (!changed.length) return json({ ok: true, changed: [] });
 
+    const saved = await saveContent(next, Number(b.version), user.name);
+    const buildRequested = await requestPublicBuild();
     const summary = changed.slice(0, 12).join(', ') + (changed.length > 12 ? ` (+${changed.length - 12})` : '');
-    const sha = await publish(files, versions, `Portal: actualizar contenido (${user.name})\n\nCampos: ${summary}`);
-    const record = { sha, at: new Date().toISOString(), by: user.name };
-    await (await store()).set('lastPublish', record);
     await audit('published', user.username, ip, summary);
-    return json({ ok: true, changed, lastPublish: record });
+    return json({ ok: true, changed, version: saved.version, lastPublish: lastPublish(saved), buildRequested });
   },
 
   'GET /api/status': async (req) => {
     await requireUser(req);
-    const last = await (await store()).get<{ sha: string }>('lastPublish');
-    return json({ live: last ? await isLive(last.sha) : true });
+    const c = await loadContent();
+    const deployed = await deployedVersion();
+    return json({ live: env.local ? true : deployed === null ? null : deployed >= c.version, hook: env.local || !!env.buildHook });
+  },
+
+  // Read by the public site's build only. Everything returned here is public anyway.
+  'GET /api/export': async (req) => {
+    const want = env.exportToken;
+    const got = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (want.length < 32) throw new HttpError(503, 'export_not_configured');
+    if (!safeEqual(got, want)) throw new HttpError(401, 'unauthorized');
+    const c = await loadContent();
+    return json({ practice: c.practice, settings: c.settings, version: c.version, updatedAt: c.updatedAt });
   },
 
   'GET /api/activity': async (req) => {
