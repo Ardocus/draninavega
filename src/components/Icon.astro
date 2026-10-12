@@ -1,0 +1,15 @@
+---
+// Line icons from the mockup. Always decorative; the link text carries meaning.
+interface Props { name: 'phone' | 'whatsapp' | 'facebook'; size?: number }
+const { name, size = 20 } = Astro.props;
+---
+<svg aria-hidden="true" focusable="false" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+  {name === 'phone' && <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />}
+  {name === 'whatsapp' && (
+    <>
+      <path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z" />
+      <path d="M9 9.5c.3 2.4 2.1 4.2 4.5 4.5l1-1.4 2 .9-.4 1.6c-3.7.2-7.4-3.5-7.2-7.2l1.6-.4.9 2z" />
+    </>
+  )}
+  {name === 'facebook' && <path d="M14 21v-8h3l.5-3.5H14V7.6c0-1 .3-1.7 1.8-1.7h1.8V2.8A24 24 0 0 0 15 2.6c-2.6 0-4.4 1.6-4.4 4.5v2.4h-3V13h3v8" />}
+</svg>

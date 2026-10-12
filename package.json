@@ -1,0 +1,19 @@
+{
+  "name": "dra-nina-vega",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sitio web de la Dra. Nina M. Vega Vázquez, psiquiatra en Ponce, PR.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "og": "node scripts/render-images.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.3.8"
+  }
+}

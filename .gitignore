@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.netlify/
+.env
+.env.*
+.DS_Store
+Thumbs.db
+admin/.local-store/
+.claude/

@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+import { strings, practice, langPath, other, jsonLd, safeJson, type Lang } from '../lib/site';
+import Announcement from '../components/Announcement.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import QuickBar from '../components/QuickBar.astro';
+
+interface Props { lang: Lang; title?: string; description?: string; noindex?: boolean }
+const { lang, noindex = false } = Astro.props;
+const t = strings[lang];
+const title = Astro.props.title ?? t.meta.title;
+const description = Astro.props.description ?? t.meta.description;
+
+const site = Astro.site!;
+const url = (path: string) => new URL(path, site).href;
+const canonical = url(langPath[lang]);
+const ogImage = url('/og.png');
+
+// Section anchors in the other language, so the switch lands on the same section.
+const o = strings[other(lang)].anchors;
+const anchorMap = Object.fromEntries(
+  (Object.keys(t.anchors) as (keyof typeof t.anchors)[]).map((k) => [t.anchors[k], o[k]]),
+);
+---
+<!doctype html>
+<html lang={lang} data-anchor-map={JSON.stringify(anchorMap)}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <meta name="theme-color" content="#F5EFE4">
+  <meta name="format-detection" content="telephone=no">
+  {noindex && <meta name="robots" content="noindex">}
+
+  {!noindex && (
+    <>
+      <link rel="canonical" href={canonical}>
+      <link rel="alternate" hreflang="es" href={url(langPath.es)}>
+      <link rel="alternate" hreflang="en" href={url(langPath.en)}>
+      <link rel="alternate" hreflang="x-default" href={url(langPath.es)}>
+    </>
+  )}
+
+  <link rel="preload" href="/fonts/marcellus-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/atkinson-hyperlegible-next-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content={practice.name.es_full}>
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={canonical}>
+  <meta property="og:locale" content={t.meta.og_locale}>
+  <meta property="og:locale:alternate" content={strings[other(lang)].meta.og_locale}>
+  <meta property="og:image" content={ogImage}>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content={`${practice.name.es_full} · ${practice.tagline.es}`}>
+  <meta name="twitter:card" content="summary_large_image">
+
+  {!noindex && <script type="application/ld+json" set:html={safeJson(jsonLd(lang, canonical))} />}
+</head>
+<body>
+  <a class="skip" href="#main">{t.skip}</a>
+  <Announcement lang={lang} />
+  <Header lang={lang} />
+  <main id="main" tabindex="-1">
+    <slot />
+  </main>
+  <Footer lang={lang} />
+  <QuickBar lang={lang} />
+  <script>import '../scripts/site.ts';</script>
+</body>
+</html>

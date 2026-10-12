@@ -1,0 +1,21 @@
+---
+import { announcement, strings, type Lang } from '../lib/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const a = announcement(lang);
+---
+{a && (
+  <aside
+    class="announce"
+    aria-label={strings[lang].announcement_label}
+    data-announce
+    data-start={a.start}
+    data-end={a.end}
+    hidden={!a.activeAtBuild}
+  >
+    <div class="wrap">
+      <span class="announce__label" aria-hidden="true">{strings[lang].announcement_label}</span>
+      <p>{a.text}</p>
+    </div>
+  </aside>
+)}

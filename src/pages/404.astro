@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { strings, practice, telHref } from '../lib/site';
+const es = strings.es.not_found;
+const en = strings.en.not_found;
+---
+<Base lang="es" title={`${es.title} · ${practice.name.es_full}`} noindex>
+  <section class="wrap band" aria-labelledby="h-404">
+    <p class="eyebrow">404</p>
+    <h1 class="h2" id="h-404">{es.title}</h1>
+    <div class="gold-rule" aria-hidden="true"></div>
+    <p>{es.body} <span lang="en">{en.body}</span></p>
+    <div class="btns btns--spaced">
+      <a class="btn btn--line" href="/">{es.back}</a>
+      <a class="btn btn--line" href="/en/" lang="en">{en.back}</a>
+      <a class="btn btn--cta" href={telHref(practice.phone)}>{practice.phone_display}</a>
+    </div>
+  </section>
+</Base>

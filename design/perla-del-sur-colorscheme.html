@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>Perla del Sur · Color Scheme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&family=Marcellus&display=swap">
+<style>
+:root{
+  color-scheme: light only;
+  --cal:#F5EFE4; --cal-100:#EDE4D3; --papel:#FBF8F2;
+  --tinta:#16332F; --tinta-suave:#4F625D; --linea:#CFC3AE;
+  --mar:#0E6B63; --vidrio:#A6D9D3; --girasol:#D9A33A;
+  --flamboyan:#B8432A; --uva:#5E7A3C; --blanco:#FFFFFF;
+  --display: Marcellus, "Times New Roman", serif;
+  --texto: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --wrap: 1240px;
+  --gutter: clamp(16px, 4vw, 40px);
+}
+*{box-sizing:border-box}
+html{background:var(--cal)}
+body{margin:0;background:var(--cal);color:var(--tinta);font:400 18px/1.6 var(--texto);-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0}
+p{margin:0}
+.lema{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tinta-suave);margin-bottom:12px}
+.en{color:var(--tinta-suave)}
+section{padding:clamp(72px,9vw,120px) 0}
+.band{background:var(--cal-100)}
+.band-vidrio{background:var(--vidrio)}
+.sec-head{display:flex;flex-wrap:wrap;gap:24px 72px;align-items:flex-end;justify-content:space-between;margin-bottom:56px}
+.sec-head h2{font-size:clamp(34px,4vw,52px);line-height:1.1}
+.sec-head p.intro{max-width:30em;color:var(--tinta-suave)}
+a{color:var(--mar)}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--mar);outline-offset:3px}
+
+/* Cover */
+.cover{padding:clamp(56px,8vw,112px) 0 clamp(56px,8vw,96px);border-bottom:1px solid var(--linea)}
+.cover .wrap{display:flex;flex-wrap:wrap;align-items:flex-end;gap:56px 72px}
+.cover-text{flex:999 1 480px;min-width:0}
+.cover h1{font-size:clamp(56px,9vw,128px);line-height:.95}
+.rule{width:112px;height:3px;background:var(--girasol);margin:32px 0}
+.cover .sub{font-size:20px;max-width:30em;color:var(--tinta-suave)}
+.cover-art{flex:1 1 320px;max-width:460px;height:360px;display:grid;grid-template-columns:1.6fr 1fr 1.2fr;grid-template-rows:1fr 1fr 1fr;gap:16px}
+.cover-art .a{grid-row:1/4;background:var(--vidrio);border-radius:999px 999px 0 0;position:relative}
+.cover-art .a::after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:var(--girasol);left:50%;top:22%;transform:translateX(-50%)}
+.cover-art .b{grid-row:1/3;background:var(--mar)}
+.cover-art .c{grid-row:3;background:var(--flamboyan)}
+.cover-art .d{grid-row:2/4;background:var(--tinta);display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 12px;align-content:center}
+.cover-art .d i{display:block;height:36px;background:var(--cal);border-radius:999px 999px 0 0}
+.cover-art .e{grid-row:1;background:var(--uva);border-radius:999px 999px 0 0}
+
+/* Mosaic */
+.mosaic{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:150px;gap:12px}
+.tile{position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;border:0;text-align:left;cursor:pointer;color:var(--tinta);min-height:0;transition:transform .15s ease}
+.tile:hover{transform:translateY(-2px)}
+.tile .nm{font-family:var(--display);font-size:clamp(22px,2.2vw,30px);line-height:1.1}
+.tile .gl{font-size:14px;opacity:.85}
+.tile .hx{font-size:14px;font-weight:700;letter-spacing:.06em;margin-top:6px}
+.tile .cp{position:absolute;top:14px;right:16px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:0;transition:opacity .15s}
+.tile:hover .cp,.tile:focus-visible .cp,.tile.ok .cp{opacity:1}
+.on-dark{color:var(--blanco)}
+.t-cal{grid-column:span 3;grid-row:span 2;background:var(--cal);outline:1px solid var(--linea);outline-offset:-1px}
+.t-vidrio{grid-column:span 2;grid-row:span 2;background:var(--vidrio);border-radius:999px 999px 0 0}
+.t-mar{grid-column:span 1;grid-row:span 2;background:var(--mar)}
+.t-tinta{grid-column:span 2;grid-row:span 1;background:var(--tinta)}
+.t-flamboyan{grid-column:span 1;background:var(--flamboyan)}
+.t-girasol{grid-column:span 1;background:var(--girasol)}
+.t-uva{grid-column:span 2;background:var(--uva)}
+.t-cal100{grid-column:span 2;background:var(--cal-100)}
+.t-papel{grid-column:span 1;background:var(--papel);outline:1px solid var(--linea);outline-offset:-1px}
+.t-linea{grid-column:span 1;background:var(--linea)}
+.t-suave{grid-column:span 2;background:var(--tinta-suave)}
+
+/* Proportion */
+.prop{display:flex;height:96px;margin-top:56px}
+.prop div{position:relative}
+.prop span{position:absolute;left:0;top:calc(100% + 10px);font-size:14px;white-space:nowrap;color:var(--tinta-suave)}
+.prop b{display:block;color:var(--tinta);font-weight:700}
+.prop-legend{height:64px}
+
+/* Detail rows */
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--linea)}
+.row{display:grid;grid-template-columns:72px minmax(160px,1fr) minmax(0,2fr) minmax(0,2fr);gap:16px 32px;padding:28px 0;border-bottom:1px solid var(--linea);align-items:start}
+.sw{width:72px;height:96px;border-radius:999px 999px 0 0}
+.row h3{font-size:28px;line-height:1.1}
+.row .codes{font-size:14px;color:var(--tinta-suave);margin-top:8px;font-variant-numeric:tabular-nums}
+.row .k{display:block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-suave);margin-bottom:4px}
+.row p{font-size:16px;line-height:1.55}
+.copy{margin-top:10px;background:none;border:1px solid var(--tinta);border-radius:4px;padding:6px 12px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--tinta);cursor:pointer;min-height:36px}
+.copy:hover{background:var(--tinta);color:var(--cal)}
+
+/* Contrast */
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0;border-top:1px solid var(--tinta)}
+.pair{display:flex;gap:16px;align-items:center;padding:18px 0;border-bottom:1px solid var(--tinta);margin-right:24px}
+.chip{flex:0 0 72px;height:56px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:28px}
+.pair .r{font-size:22px;font-family:var(--display)}
+.pair .d{font-size:14px}
+.badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;padding:2px 8px;border-radius:999px;border:1px solid currentColor;margin-left:6px;vertical-align:2px}
+
+/* Type */
+.type{display:flex;flex-wrap:wrap;gap:48px 88px}
+.type > div{flex:1 1 420px;min-width:0}
+.specimen{font-family:var(--display);font-size:clamp(64px,8vw,112px);line-height:1;margin:8px 0 16px}
+.specimen.sans{font-family:var(--texto);font-weight:700}
+.scale{list-style:none;margin:24px 0 0;padding:0;border-top:1px solid var(--linea)}
+.scale li{display:flex;gap:16px;align-items:baseline;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--linea)}
+.scale small{font-size:13px;color:var(--tinta-suave);white-space:nowrap}
+
+/* Applied */
+.applied{display:flex;flex-wrap:wrap;gap:24px}
+.frame{flex:999 1 620px;min-width:0;background:var(--cal);border:1px solid var(--linea)}
+.frame-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--linea);font-size:14px}
+.frame-bar .wm{font-family:var(--display);font-size:20px}
+.frame-hero{display:flex;gap:32px;align-items:flex-end;padding:48px 32px 40px}
+.frame-hero .tx{flex:1 1 auto;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid var(--linea);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--girasol)}
+.frame-hero h3{font-size:clamp(36px,4.4vw,56px);line-height:1}
+.frame-hero .rule{width:72px;margin:18px 0}
+.frame-hero .tag{font-family:var(--display);font-size:22px;margin-bottom:20px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;min-height:48px;padding:0 20px;border-radius:4px;font-weight:700;font-size:16px;text-decoration:none;border:2px solid transparent}
+.btn-cta{background:var(--flamboyan);color:var(--blanco)}
+.btn-mar{background:var(--mar);color:var(--blanco)}
+.btn-line{border-color:var(--tinta);color:var(--tinta)}
+.frame-arch{flex:0 0 140px;height:190px;background:var(--vidrio);border-radius:999px 999px 0 0}
+.frame-plans{background:var(--vidrio);padding:28px 32px}
+.frame-plans ul{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid var(--tinta)}
+.frame-plans li{font-family:var(--display);font-size:22px;padding:10px 0;border-bottom:1px solid var(--tinta)}
+.frame-foot{background:var(--tinta);color:var(--cal);padding:24px 32px;display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between;font-size:15px}
+.frame-foot .crisis{border-left:3px solid var(--girasol);padding-left:14px;color:#C9D6D2;max-width:26em}
+.frame-foot b{color:var(--cal)}
+.side{flex:1 1 280px;display:flex;flex-direction:column;gap:24px}
+.side .card-free{border-top:2px solid var(--tinta);padding-top:16px}
+.side h4{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 12px}
+
+/* Rules */
+.rules{display:flex;flex-wrap:wrap;gap:40px 72px}
+.rules > div{flex:1 1 380px}
+.rules h3{font-size:30px;margin-bottom:16px}
+.rules ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--tinta)}
+.rules li{padding:14px 0 14px 32px;border-bottom:1px solid var(--tinta);position:relative;font-size:17px}
+.rules li::before{position:absolute;left:0;top:14px;font-weight:700}
+.do li::before{content:"✓";color:var(--mar)}
+.dont li::before{content:"✕";color:var(--flamboyan)}
+
+/* Code */
+.code{background:var(--papel);border:1px solid var(--linea);padding:24px;overflow-x:auto;font:14px/1.7 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--tinta);margin:0}
+.code-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:16px}
+
+footer.end{background:var(--tinta);color:var(--cal);padding:48px 0}
+footer.end .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px 40px}
+footer.end .wm{font-family:var(--display);font-size:28px}
+footer.end p{color:#C9D6D2;font-size:15px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:var(--cal);padding:12px 20px;border-radius:4px;font-size:15px;font-weight:700;opacity:0;pointer-events:none;transition:all .2s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width: 900px){
+  .mosaic{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:130px}
+  .mosaic .tile{grid-column:span 1 !important;grid-row:span 1 !important}
+  .mosaic .t-cal,.mosaic .t-vidrio{grid-column:span 2 !important;grid-row:span 2 !important}
+  .row{grid-template-columns:56px 1fr}
+  .row > div:nth-child(3),.row > div:nth-child(4){grid-column:2}
+  .sw{width:56px;height:76px}
+}
+@media (max-width: 640px){
+  .cover-art{height:260px}
+  .frame-hero{flex-direction:column;align-items:flex-start;padding:32px 20px}
+  .frame-arch{display:none}
+  .frame-plans,.frame-foot{padding:24px 20px}
+  .prop span{font-size:12px}
+  .prop span.hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="wrap">
+    <div class="cover-text">
+      <p class="lema">Paleta de color · Color scheme</p>
+      <h1>Perla<br>del Sur</h1>
+      <div class="rule" aria-hidden="true"></div>
+      <p class="sub">El sistema de color de la Dra. Nina M. Vega Vázquez, psiquiatra en Ponce, Puerto Rico. Cada color nace de algo real: su logo, sus anuncios, el letrero de su oficina y la ciudad.</p>
+      <p class="sub en" lang="en" style="margin-top:12px;font-size:17px">The color system for Dr. Nina M. Vega Vázquez's psychiatry practice. Every color comes from something real: her logo, her flyers, her office sign and her city.</p>
+    </div>
+    <div class="cover-art" aria-hidden="true">
+      <div class="a"></div>
+      <div class="e"></div>
+      <div class="b"></div>
+      <div class="c"></div>
+      <div class="d"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">01 · La paleta · The palette</p>
+        <h2>Once colores, un lugar</h2>
+      </div>
+      <p class="intro">Haga clic en cualquier color para copiar su código. <span class="en" lang="en">Click any color to copy its hex code.</span></p>
+    </div>
+
+    <div class="mosaic" id="mosaic">
+      <button class="tile t-cal" data-hex="#F5EFE4"><span class="cp">Copiar</span><span class="nm">Cal</span><span class="gl">Limestone · fondo</span><span class="hx">#F5EFE4</span></button>
+      <button class="tile t-vidrio" data-hex="#A6D9D3"><span class="cp">Copiar</span><span class="nm">Vidrio</span><span class="gl">Sea glass · su logo</span><span class="hx">#A6D9D3</span></button>
+      <button class="tile t-mar on-dark" data-hex="#0E6B63"><span class="cp">Copiar</span><span class="nm">Mar</span><span class="gl">Sea teal</span><span class="hx">#0E6B63</span></button>
+      <button class="tile t-tinta on-dark" data-hex="#16332F"><span class="cp">Copiar</span><span class="nm">Tinta</span><span class="gl">Ink · texto</span><span class="hx">#16332F</span></button>
+      <button class="tile t-flamboyan on-dark" data-hex="#B8432A"><span class="cp">Copiar</span><span class="nm">Flamboyán</span><span class="hx">#B8432A</span></button>
+      <button class="tile t-girasol" data-hex="#D9A33A"><span class="cp">Copiar</span><span class="nm">Girasol</span><span class="hx">#D9A33A</span></button>
+      <button class="tile t-uva on-dark" data-hex="#5E7A3C"><span class="cp">Copiar</span><span class="nm">Uva playera</span><span class="gl">Sea grape</span><span class="hx">#5E7A3C</span></button>
+      <button class="tile t-cal100" data-hex="#EDE4D3"><span class="cp">Copiar</span><span class="nm">Cal 100</span><span class="gl">Sand band</span><span class="hx">#EDE4D3</span></button>
+      <button class="tile t-papel" data-hex="#FBF8F2"><span class="cp">Copiar</span><span class="nm">Papel</span><span class="hx">#FBF8F2</span></button>
+      <button class="tile t-linea" data-hex="#CFC3AE"><span class="cp">Copiar</span><span class="nm">Línea</span><span class="hx">#CFC3AE</span></button>
+      <button class="tile t-suave on-dark" data-hex="#4F625D"><span class="cp">Copiar</span><span class="nm">Tinta suave</span><span class="gl">Soft ink</span><span class="hx">#4F625D</span></button>
+    </div>
+
+    <div aria-label="Proporción de uso en una página típica" role="img">
+      <div class="prop">
+        <div style="flex:60;background:var(--cal);outline:1px solid var(--linea);outline-offset:-1px"><span><b>60%</b>Cal + Cal 100</span></div>
+        <div style="flex:20;background:var(--vidrio)"><span><b>20%</b>Vidrio</span></div>
+        <div style="flex:12;background:var(--tinta)"><span><b>12%</b>Tinta</span></div>
+        <div style="flex:5;background:var(--mar)"><span class="hide-sm"><b>5%</b>Mar</span></div>
+        <div style="flex:2;background:var(--girasol)"></div>
+        <div style="flex:1;background:var(--flamboyan)"></div>
+      </div>
+      <div class="prop-legend"></div>
+    </div>
+    <p style="font-size:15px;color:var(--tinta-suave);margin-top:8px">Proporción en una página típica: el último 3% es girasol y flamboyán. <span lang="en">Rough share on a typical page; the last 3% is sunflower and flamboyán.</span></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">02 · De dónde viene · Where each color comes from</p>
+        <h2>Origen y uso</h2>
+      </div>
+    </div>
+    <ol class="rows">
+      <li class="row">
+        <div class="sw" style="background:var(--vidrio)"></div>
+        <div><h3>Vidrio</h3><div class="codes">#A6D9D3<br>RGB 166 217 211</div><button class="copy" data-hex="#A6D9D3">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>El aqua de su logo circular. Uno de sus dos colores actuales. <span class="en" lang="en">The aqua of her existing circular logo.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Franjas grandes y tranquilas (planes médicos), fondos de arcos. <span class="en" lang="en">Large calm bands and arch backdrops. Tinta text on it: 8.7:1.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--mar)"></div>
+        <div><h3>Mar</h3><div class="codes">#0E6B63<br>RGB 14 107 99</div><button class="copy" data-hex="#0E6B63">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>El verde azulado de sus anuncios de "pacientes nuevos". <span class="en" lang="en">The deep teal of her new-patient flyers.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Enlaces, botón secundario, numerales. <span class="en" lang="en">Links, secondary buttons, numerals. White on it: 6.4:1.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--cal);outline:1px solid var(--linea)"></div>
+        <div><h3>Cal</h3><div class="codes">#F5EFE4<br>RGB 245 239 228</div><button class="copy" data-hex="#F5EFE4">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>La piedra caliza de las fachadas criollas del casco histórico de Ponce. <span class="en" lang="en">Limestone of Ponce's historic criollo facades.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>El fondo de todo. Nunca blanco puro. <span class="en" lang="en">The page ground. Never pure white.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--tinta)"></div>
+        <div><h3>Tinta</h3><div class="codes">#16332F<br>RGB 22 51 47</div><button class="copy" data-hex="#16332F">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Mar profundo; reemplaza el negro y el azul marino. <span class="en" lang="en">Deep water, in place of black or navy.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Texto principal, títulos, pie de página. <span class="en" lang="en">Body text, headlines, footer. On Cal: 11.9:1.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--girasol)"></div>
+        <div><h3>Girasol</h3><div class="codes">#D9A33A<br>RGB 217 163 58</div><button class="copy" data-hex="#D9A33A">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>El girasol dibujado en su logo. <span class="en" lang="en">The sunflower drawn in her logo.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Detalles pequeños: la línea bajo su nombre, el punto de "aceptando pacientes". Nunca texto. <span class="en" lang="en">Small accents only. Never text.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--flamboyan)"></div>
+        <div><h3>Flamboyán</h3><div class="codes">#B8432A<br>RGB 184 67 42</div><button class="copy" data-hex="#B8432A">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Los flamboyanes que florecen en la costa sur. <span class="en" lang="en">The flamboyán trees blooming along the south coast.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Solo un botón por pantalla: "Agende su cita". <span class="en" lang="en">Reserved for the one booking button per view. White on it: 5.4:1.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--uva)"></div>
+        <div><h3>Uva playera</h3><div class="codes">#5E7A3C<br>RGB 94 122 60</div><button class="copy" data-hex="#5E7A3C">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Las hojas de uva playera en las playas del sur. <span class="en" lang="en">Sea-grape leaves on southern beaches.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Solo ilustración: hojas y tallos. <span class="en" lang="en">Illustration only. Not for small text (4.2:1 on Cal).</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--cal-100)"></div>
+        <div><h3>Cal 100</h3><div class="codes">#EDE4D3<br>RGB 237 228 211</div><button class="copy" data-hex="#EDE4D3">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Arena tibia, un tono más profundo que Cal. <span class="en" lang="en">Warm sand, one step deeper than Cal.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Franjas alternas entre secciones. <span class="en" lang="en">Alternating section bands.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--papel);outline:1px solid var(--linea)"></div>
+        <div><h3>Papel</h3><div class="codes">#FBF8F2<br>RGB 251 248 242</div><button class="copy" data-hex="#FBF8F2">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Papel de cartas. <span class="en" lang="en">Letter paper.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Campos de formularios y superficies elevadas. <span class="en" lang="en">Form fields and the rare raised surface.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--linea)"></div>
+        <div><h3>Línea</h3><div class="codes">#CFC3AE<br>RGB 207 195 174</div><button class="copy" data-hex="#CFC3AE">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>La barra bajo su nombre en el letrero de la oficina. <span class="en" lang="en">The bar under her name on the office sign.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Líneas finas entre filas. Decorativo. <span class="en" lang="en">Hairline rules between rows. Decorative only.</span></p></div>
+      </li>
+      <li class="row">
+        <div class="sw" style="background:var(--tinta-suave)"></div>
+        <div><h3>Tinta suave</h3><div class="codes">#4F625D<br>RGB 79 98 93</div><button class="copy" data-hex="#4F625D">Copiar HEX</button></div>
+        <div><span class="k">Origen · Origin</span><p>Tinta, más tenue. <span class="en" lang="en">Ink, softened.</span></p></div>
+        <div><span class="k">Uso · Use</span><p>Texto secundario y notas. <span class="en" lang="en">Secondary text and captions. On Cal: 5.7:1.</span></p></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">03 · Combinaciones · Approved pairings</p>
+        <h2>Texto que se lee</h2>
+      </div>
+      <p class="intro">Todas cumplen WCAG AA (4.5:1 para texto normal). <span class="en" lang="en">All pass WCAG AA for normal text.</span></p>
+    </div>
+    <div class="pairs">
+      <div class="pair"><div class="chip" style="background:var(--cal);color:var(--tinta);outline:1px solid var(--linea)">Aa</div><div><div class="r">11.9 : 1 <span class="badge">AAA</span></div><div class="d">Tinta sobre Cal</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--papel);color:var(--tinta);outline:1px solid var(--linea)">Aa</div><div><div class="r">12.8 : 1 <span class="badge">AAA</span></div><div class="d">Tinta sobre Papel</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--cal-100);color:var(--tinta)">Aa</div><div><div class="r">10.7 : 1 <span class="badge">AAA</span></div><div class="d">Tinta sobre Cal 100</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--vidrio);color:var(--tinta)">Aa</div><div><div class="r">8.7 : 1 <span class="badge">AAA</span></div><div class="d">Tinta sobre Vidrio</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--girasol);color:var(--tinta)">Aa</div><div><div class="r">6.0 : 1 <span class="badge">AA</span></div><div class="d">Tinta sobre Girasol</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--mar);color:var(--blanco)">Aa</div><div><div class="r">6.4 : 1 <span class="badge">AA</span></div><div class="d">Blanco sobre Mar</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--flamboyan);color:var(--blanco)">Aa</div><div><div class="r">5.4 : 1 <span class="badge">AA</span></div><div class="d">Blanco sobre Flamboyán</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--cal);color:var(--tinta-suave);outline:1px solid var(--linea)">Aa</div><div><div class="r">5.7 : 1 <span class="badge">AA</span></div><div class="d">Tinta suave sobre Cal</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--cal);color:var(--mar);outline:1px solid var(--linea)">Aa</div><div><div class="r">5.6 : 1 <span class="badge">AA</span></div><div class="d">Mar sobre Cal (enlaces)</div></div></div>
+      <div class="pair"><div class="chip" style="background:var(--tinta);color:var(--cal)">Aa</div><div><div class="r">11.9 : 1 <span class="badge">AAA</span></div><div class="d">Cal sobre Tinta (pie)</div></div></div>
+    </div>
+    <p style="font-size:15px;color:var(--tinta-suave);margin-top:20px">Evitar: Tinta suave o Mar sobre Vidrio (≈4.1:1), y Uva o Girasol como color de texto. <span lang="en">Avoid: soft ink or teal on Vidrio, and sea grape or sunflower as text colors.</span></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">04 · Tipografía · Type</p>
+        <h2>Dos voces</h2>
+      </div>
+    </div>
+    <div class="type">
+      <div>
+        <p class="lema">Títulos · Display</p>
+        <p class="specimen">Aa Ññ</p>
+        <h3 style="font-size:32px">Marcellus</h3>
+        <p style="color:var(--tinta-suave);margin-top:8px">Mayúsculas romanas, como las letras metálicas del letrero de su oficina. Solo para el nombre y los títulos. <span lang="en">Roman capitals that echo the brushed-metal letters on her office wall.</span></p>
+        <ul class="scale">
+          <li><span style="font-family:var(--display);font-size:44px;line-height:1.05">Dra. Nina M. Vega</span><small>104 / 46 px</small></li>
+          <li><span style="font-family:var(--display);font-size:32px;line-height:1.1">Planes médicos</span><small>52 / 34 px</small></li>
+          <li><span style="font-family:var(--display);font-size:24px">Psiquiatra general</span><small>30 / 24 px</small></li>
+        </ul>
+      </div>
+      <div>
+        <p class="lema">Texto · Text</p>
+        <p class="specimen sans">Aa Ññ</p>
+        <h3 style="font-size:32px">Atkinson Hyperlegible Next</h3>
+        <p style="color:var(--tinta-suave);margin-top:8px">Diseñada por el Braille Institute para personas con baja visión. Clara para pacientes de todas las edades. <span lang="en">Designed by the Braille Institute for low-vision readers.</span></p>
+        <ul class="scale">
+          <li><span style="font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">Psiquiatra · Ponce</span><small>Lema 13 px</small></li>
+          <li><span style="font-size:20px">Horario por cita previa.</span><small>Cuerpo L 20 px</small></li>
+          <li><span style="font-size:18px">Agende su cita por teléfono.</span><small>Cuerpo 18 px</small></li>
+          <li><span style="font-size:17px;font-weight:700">Agende su cita</span><small>Botón 17 px</small></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">05 · En uso · In context</p>
+        <h2>La paleta en la página</h2>
+      </div>
+    </div>
+    <div class="applied">
+      <div class="frame" aria-label="Vista previa del sitio">
+        <div class="frame-bar"><span class="wm">Dra. Nina M. Vega</span><span>Especialidades · Planes · Contacto</span></div>
+        <div class="frame-hero">
+          <div class="tx">
+            <span class="pill">Aceptando pacientes nuevos</span>
+            <p class="lema" style="margin-bottom:8px">Psiquiatra · Ponce, Puerto Rico</p>
+            <h3>Dra. Nina M. Vega</h3>
+            <div class="rule" aria-hidden="true"></div>
+            <p class="tag">“Su bienestar es nuestra meta”</p>
+            <div class="btns">
+              <a class="btn btn-cta" href="tel:+17878487646">Agende su cita</a>
+              <a class="btn btn-line" href="https://wa.me/17878487646">WhatsApp</a>
+            </div>
+          </div>
+          <div class="frame-arch" aria-hidden="true"></div>
+        </div>
+        <div class="frame-plans">
+          <p class="lema" style="color:var(--tinta);margin:0">Planes médicos aceptados</p>
+          <ul><li>Triple-S Medicare Advantage</li><li>MCS Classicare</li><li>MCS Comercial</li></ul>
+        </div>
+        <div class="frame-foot">
+          <span><b style="font-family:var(--display);font-weight:400;font-size:20px">Dra. Nina M. Vega</b></span>
+          <span class="crisis"><b>¿Está en crisis?</b> Llame o envíe texto al 988, o a la Línea PAS 1-800-981-0023.</span>
+        </div>
+      </div>
+      <div class="side">
+        <div class="card-free">
+          <h4>Botones · Buttons</h4>
+          <div class="btns" style="flex-direction:column;align-items:flex-start">
+            <span class="btn btn-cta">Agende su cita</span>
+            <span class="btn btn-mar">Llamar</span>
+            <span class="btn btn-line">Cómo llegar</span>
+          </div>
+          <p style="font-size:15px;color:var(--tinta-suave);margin-top:12px">Coral solo una vez por pantalla. <span lang="en">Coral once per view.</span></p>
+        </div>
+        <div class="card-free">
+          <h4>Detalles · Accents</h4>
+          <span class="pill" style="margin:0 0 16px">Aceptando pacientes nuevos</span>
+          <div style="width:96px;height:3px;background:var(--girasol)"></div>
+          <div style="display:flex;gap:10px;margin-top:20px;align-items:flex-end">
+            <div style="width:48px;height:64px;background:var(--vidrio);border-radius:999px 999px 0 0"></div>
+            <div style="width:32px;height:64px;background:var(--cal-100);border-radius:999px 999px 0 0"></div>
+            <div style="font-family:var(--display);font-size:40px;color:var(--mar);line-height:1;margin-left:8px">01</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band-vidrio">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema" style="color:var(--tinta)">06 · Reglas · Rules</p>
+        <h2>Sí y no</h2>
+      </div>
+    </div>
+    <div class="rules">
+      <div class="do">
+        <h3>Sí · Do</h3>
+        <ul>
+          <li>Cal como fondo de todas las páginas. <span lang="en">Cal as the page ground.</span></li>
+          <li>Tinta para todo el texto principal. <span lang="en">Tinta for all main text.</span></li>
+          <li>Franjas de borde a borde que alternan Cal, Cal 100 y Vidrio. <span lang="en">Full-bleed bands, alternating.</span></li>
+          <li>Un solo botón Flamboyán por pantalla. <span lang="en">One coral button per view.</span></li>
+          <li>Girasol en detalles pequeños. <span lang="en">Sunflower in small accents.</span></li>
+        </ul>
+      </div>
+      <div class="dont">
+        <h3>No · Don't</h3>
+        <ul>
+          <li>Blanco puro, negro puro o azul marino. <span lang="en">Pure white, pure black or navy.</span></li>
+          <li>Degradados o sombras de colores. <span lang="en">Gradients or colored shadows.</span></li>
+          <li>Cuadrículas de tarjetas redondeadas. <span lang="en">Grids of rounded cards.</span></li>
+          <li>Girasol o Uva como color de texto. <span lang="en">Sunflower or sea grape as text.</span></li>
+          <li>Modo oscuro. Esta paleta es solo de día. <span lang="en">Dark mode. This palette is light only.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="lema">07 · Para desarrollo · For developers</p>
+        <h2>Variables CSS</h2>
+      </div>
+    </div>
+    <div class="code-head">
+      <span style="font-size:15px;color:var(--tinta-suave)">Copie y pegue en su hoja de estilos. <span lang="en">Paste into your stylesheet.</span></span>
+      <button class="copy" id="copy-css" style="margin:0">Copiar CSS</button>
+    </div>
+<pre class="code" id="css-block">:root {
+  color-scheme: light only;
+  --cal: #F5EFE4;          /* fondo · page ground */
+  --cal-100: #EDE4D3;      /* franjas · bands */
+  --papel: #FBF8F2;        /* formularios · inputs */
+  --tinta: #16332F;        /* texto · text */
+  --tinta-suave: #4F625D;  /* texto secundario · secondary text */
+  --linea: #CFC3AE;        /* líneas · hairlines */
+  --mar: #0E6B63;          /* enlaces, botón secundario · links, secondary */
+  --vidrio: #A6D9D3;       /* franjas aqua · aqua bands */
+  --girasol: #D9A33A;      /* detalles · accents */
+  --flamboyan: #B8432A;    /* botón de citas · booking CTA */
+  --uva: #5E7A3C;          /* ilustración · illustration */
+  --font-display: Marcellus, "Times New Roman", serif;
+  --font-texto: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+}</pre>
+  </div>
+</section>
+
+<footer class="end">
+  <div class="wrap">
+    <span class="wm">Perla del Sur</span>
+    <p>Dra. Nina M. Vega Vázquez · Ponce, Puerto Rico · “Su bienestar es nuestra meta”</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var toast = document.getElementById('toast'), timer;
+  function show(msg){
+    toast.textContent = msg; toast.classList.add('show');
+    clearTimeout(timer); timer = setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+  }
+  function copy(text, msg){
+    function fallback(){
+      var t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly','');
+      t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); show(msg); } catch(e){ show(text); }
+      document.body.removeChild(t);
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function(){ show(msg); }, fallback);
+      } else { fallback(); }
+    } catch(e){ fallback(); }
+  }
+  document.querySelectorAll('[data-hex]').forEach(function(el){
+    el.addEventListener('click', function(){
+      copy(el.getAttribute('data-hex'), 'Copiado · Copied ' + el.getAttribute('data-hex'));
+      el.classList.add('ok'); setTimeout(function(){ el.classList.remove('ok'); }, 1200);
+    });
+  });
+  document.getElementById('copy-css').addEventListener('click', function(){
+    copy(document.getElementById('css-block').textContent, 'CSS copiado · CSS copied');
+  });
+})();
+</script>
+</body>
+</html>

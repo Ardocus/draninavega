@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- Source for public/og.png, public/apple-touch-icon.png and public/favicon-32.png.
+     Rendered by scripts/render-images.mjs (npm run og). ?icon renders the square icon. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: Marcellus; src: url('../public/fonts/marcellus-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 200 800; src: url('../public/fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2'); }
+html, body { margin: 0; background: #F5EFE4; color: #16332F; }
+.og { width: 1200px; height: 630px; box-sizing: border-box; padding: 0 88px; display: flex; align-items: flex-end; gap: 72px; overflow: hidden; }
+.tx { flex: 1; padding-bottom: 96px; }
+.eyebrow { font: 700 22px/1 'Atkinson Hyperlegible Next', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #4F625D; margin: 0 0 24px; }
+h1 { font: 400 76px/1.05 Marcellus, serif; margin: 0; white-space: nowrap; }
+.rule { width: 140px; height: 4px; background: #D9A33A; margin: 36px 0; }
+.tag { font: 400 40px/1.2 Marcellus, serif; margin: 0; }
+.arch { flex: 0 0 300px; height: 420px; background: #A6D9D3; border-radius: 999px 999px 0 0; display: flex; align-items: center; justify-content: center; }
+.arch svg { width: 45%; }
+.icon { display: none; width: 180px; height: 180px; background: #A6D9D3; align-items: center; justify-content: center; }
+.icon svg { width: 62%; }
+.icon.small { width: 32px; height: 32px; background: #F5EFE4; }
+.icon.small svg { width: 100%; }
+body.is-icon .og { display: none; }
+body.is-icon .icon { display: flex; }
+</style>
+</head>
+<body>
+<div class="og">
+  <div class="tx">
+    <p class="eyebrow">Psiquiatra · Ponce, Puerto Rico</p>
+    <h1>Dra. Nina M. Vega<br>Vázquez</h1>
+    <div class="rule"></div>
+    <p class="tag">“Su bienestar es nuestra meta”</p>
+  </div>
+  <div class="arch">
+    <svg viewBox="0 0 120 160"><g fill="none" stroke="#5E7A3C" stroke-width="1.6" stroke-linecap="round"><path d="M60 156V70"/><path d="M60 114c-20-6-30-18-32-32 16 2 28 14 32 32z"/><path d="M60 98c18-6 30-18 32-32-16 2-28 14-32 32z"/></g><g fill="none" stroke="#16332F" stroke-width="1.6" stroke-linecap="round"><circle cx="60" cy="50" r="11"/><path d="M60 27v-9M60 82v-9M37 50h-9M92 50h-9M44 34l-6-6M82 72l-6-6M76 34l6-6M38 72l6-6"/></g></svg>
+  </div>
+</div>
+<div class="icon">
+  <svg viewBox="0 0 64 64"><g fill="none" stroke="#16332F" stroke-width="3" stroke-linecap="round"><circle cx="32" cy="32" r="9"/><path d="M32 9v7M32 48v7M9 32h7M48 32h7M16 16l5 5M43 43l5 5M48 16l-5 5M21 43l-5 5"/></g></svg>
+</div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.has('icon')) document.body.classList.add('is-icon');
+  if (p.get('icon') === 'small') {
+    const i = document.querySelector('.icon');
+    i.classList.add('small');
+    i.innerHTML = '<svg viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#F5EFE4"/><g fill="none" stroke="#D9A33A" stroke-width="4" stroke-linecap="round"><circle cx="32" cy="32" r="9"/><path d="M32 9v7M32 48v7M9 32h7M48 32h7M16 16l5 5M43 43l5 5M48 16l-5 5M21 43l-5 5"/></g></svg>';
+  }
+</script>
+</body>
+</html>

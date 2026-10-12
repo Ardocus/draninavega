@@ -1,0 +1,63 @@
+{
+  "name": {
+    "es_short": "Dra. Nina M. Vega",
+    "es_full": "Dra. Nina M. Vega Vázquez",
+    "en_short": "Dr. Nina M. Vega",
+    "en_full": "Dr. Nina M. Vega Vázquez"
+  },
+  "tagline": {
+    "es": "Su bienestar es nuestra meta",
+    "en": "Your well-being is our goal"
+  },
+  "specialties": {
+    "es": [
+      "Psiquiatra general",
+      "Sub-especialista en niños y adolescentes"
+    ],
+    "en": [
+      "General psychiatry",
+      "Child & adolescent psychiatry (sub-specialty)"
+    ]
+  },
+  "summary": {
+    "es": "Psiquiatra de adultos, niños y adolescentes. Horario por cita previa.",
+    "en": "Psychiatrist for adults, children and adolescents. By appointment only."
+  },
+  "certifications": [
+    "Diplomate of the American Board of Psychiatry & Neurology",
+    "Diplomate of the American Board of Child and Adolescent Psychiatry"
+  ],
+  "address": {
+    "street": "472 Ave. Tito Castro",
+    "building": "Edificio Marvesa, Suite 401",
+    "city": "Ponce",
+    "region": "PR",
+    "postal": "00716",
+    "country": "US"
+  },
+  "phone": "+17878487646",
+  "phone_display": "(787) 848-7646",
+  "fax": "+17872907722",
+  "fax_display": "(787) 290-7722",
+  "email": "draninavega@yahoo.com",
+  "hours": {
+    "es": "Por cita previa",
+    "en": "By appointment only"
+  },
+  "available_languages": [
+    "es"
+  ],
+  "crisis_lines": [
+    {
+      "label": "988",
+      "tel": "988",
+      "note_es": "llamada o texto",
+      "note_en": "call or text"
+    },
+    {
+      "label": "Línea PAS",
+      "tel": "+18009810023",
+      "display": "1-800-981-0023"
+    }
+  ]
+}

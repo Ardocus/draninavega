@@ -1,0 +1,117 @@
+---
+import Icon from './Icon.astro';
+import Motif from './Motif.astro';
+import { strings, practice, settings, whatsapp, mapsUrl, name, telHref, type Lang } from '../lib/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = strings[lang];
+const a = practice.address;
+const num = (i: number) => String(i + 1).padStart(2, '0');
+---
+<!-- Hero -->
+<section id={t.anchors.home} class="wrap hero" aria-labelledby="h-name">
+  <div class="hero__text">
+    {settings.accepting_new_patients && (
+      <p class="status-pill"><span class="status-pill__dot" aria-hidden="true"></span>{t.hero.accepting}</p>
+    )}
+    <p class="eyebrow">{t.hero.eyebrow}</p>
+    <h1 id="h-name">{name(lang).short}</h1>
+    <div class="gold-rule" aria-hidden="true"></div>
+    {lang === 'es' ? (
+      <p class="hero__tagline">“{practice.tagline.es}”</p>
+    ) : (
+      <p class="hero__tagline"><span lang="es">“{practice.tagline.es}”</span><span class="hero__tagline-en">{practice.tagline.en}</span></p>
+    )}
+    <p class="hero__summary">{practice.summary[lang]}</p>
+    <div class="btns">
+      <a class="btn btn--cta" href={telHref(practice.phone)}><Icon name="phone" />{t.hero.cta} · {practice.phone_display}</a>
+      {whatsapp && <a class="btn btn--line" href={whatsapp}><Icon name="whatsapp" />{t.hero.whatsapp}</a>}
+    </div>
+  </div>
+  <div class="hero__art" aria-hidden="true">
+    <div class="arch hero__arch"><Motif /></div>
+    <div class="arch hero__arch-2 m-hide"></div>
+  </div>
+</section>
+
+<!-- Specialties + certifications -->
+<section id={t.anchors.specialties} class="band band--sand" aria-labelledby="h-specialties">
+  <div class="wrap split">
+    <div class="split__head">
+      <p class="eyebrow">{t.specialties.eyebrow}</p>
+      <h2 class="h2" id="h-specialties">{name(lang).full}</h2>
+    </div>
+    <div class="split__body">
+      <ol class="rows">
+        {practice.specialties[lang].map((s, i) => (
+          <li><span class="rows__num" aria-hidden="true">{num(i)}</span><h3>{s}</h3></li>
+        ))}
+      </ol>
+      <p class="eyebrow certs-label">{t.specialties.certifications}</p>
+      <!-- Shown in English on both pages, exactly as on her card. -->
+      <ul class="hairlist" lang={lang === 'en' ? undefined : 'en'}>
+        {practice.certifications.map((c) => <li>{c}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Insurance -->
+<section id={t.anchors.insurance} class="band--glass" aria-labelledby="h-insurance">
+  <div class="wrap split">
+    <div class="split__head">
+      <p class="eyebrow eyebrow--ink">{t.insurance.eyebrow}</p>
+      <h2 class="h2" id="h-insurance">{t.insurance.title}</h2>
+      <p class="insurance__note">{t.insurance.book} <a href={telHref(practice.phone)}>{practice.phone_display}</a></p>
+    </div>
+    <ul class="typeset">
+      {settings.insurance.map((plan) => <li>{plan}</li>)}
+    </ul>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id={t.anchors.contact} class="wrap band contact" aria-labelledby="h-contact">
+  <div class="contact__text">
+    <p class="eyebrow">{t.contact.eyebrow}</p>
+    <h2 class="h2" id="h-contact">{t.contact.title}</h2>
+    <dl class="deflist">
+      <div>
+        <dt>{t.contact.address}</dt>
+        <dd>
+          <address>{a.street}<br>{a.building}<br>{a.city}, {a.region} {a.postal}</address>
+        </dd>
+      </div>
+      <div>
+        <dt>{t.contact.phone}</dt>
+        <dd><a href={telHref(practice.phone)}>{practice.phone_display}</a></dd>
+      </div>
+      {settings.show_fax && (
+        <div>
+          <dt>{t.contact.fax}</dt>
+          <dd>{practice.fax_display}</dd>
+        </div>
+      )}
+      <div>
+        <dt>{t.contact.email}</dt>
+        <dd><a href={`mailto:${practice.email}`}>{practice.email}</a></dd>
+      </div>
+      <div>
+        <dt>{t.contact.hours}</dt>
+        <dd>{practice.hours[lang]}</dd>
+      </div>
+    </dl>
+    <div class="btns">
+      <a class="btn btn--cta" href={telHref(practice.phone)}>{t.contact.cta}</a>
+      <a class="btn btn--line" href={mapsUrl}>{t.contact.directions}</a>
+    </div>
+  </div>
+  <!-- Map slot (DEV-HANDOFF §9.1): swap this decorative arch for a map in the same shape. -->
+  <div class="arch contact__art m-hide" aria-hidden="true">
+    <svg viewBox="0 0 300 300">
+      <g fill="none" stroke="#CFC3AE" stroke-width="1.2"><path d="M0 110h300M0 190h300M90 0v300M200 0v300M0 30l300 240" /></g>
+      <circle cx="146" cy="150" r="9" fill="#B8432A" />
+      <circle cx="146" cy="150" r="20" fill="none" stroke="#B8432A" stroke-width="1.2" />
+    </svg>
+  </div>
+</section>

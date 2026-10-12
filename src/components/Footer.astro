@@ -1,0 +1,36 @@
+---
+import Icon from './Icon.astro';
+import { strings, practice, name, facebookUrl, langPath, other, telHref, type Lang } from '../lib/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = strings[lang];
+const to = other(lang);
+const [line988, linePas] = practice.crisis_lines;
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <p class="footer__name">{name(lang).short}</p>
+        <p class="footer__muted">{practice.tagline[lang]}.</p>
+        {facebookUrl && (
+          <a class="footer__fb" href={facebookUrl} target="_blank" rel="noopener noreferrer">
+            <Icon name="facebook" />{t.footer.facebook}<span class="sr-only"> {t.new_tab}</span>
+          </a>
+        )}
+      </div>
+      <!-- Crisis block: required on every page in both languages (DEV-HANDOFF §1.3). -->
+      <div class="crisis">
+        <p class="crisis__title">{t.footer.crisis_title}</p>
+        <p>
+          {t.footer.crisis_before_988} <a href={telHref(line988.tel)}>{line988.label}</a>{t.footer.crisis_before_pas} <a href={telHref(linePas.tel)}>{linePas.display}</a>{t.footer.crisis_after}
+        </p>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© {year} {name(lang).full} · Ponce, Puerto Rico</p>
+      <a href={langPath[to]} hreflang={to} lang={to} data-lang-switch>{t.footer.switch}</a>
+    </div>
+  </div>
+</footer>

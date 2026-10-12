@@ -1,0 +1,10 @@
+---
+import { strings, practice, whatsapp, telHref, type Lang } from '../lib/site';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = strings[lang].quickbar;
+---
+<nav class="quickbar" aria-label={t.label}>
+  <a class="quickbar__call" href={telHref(practice.phone)}>{t.call}</a>
+  {whatsapp && <a class="quickbar__wa" href={whatsapp}>{t.whatsapp}</a>}
+</nav>

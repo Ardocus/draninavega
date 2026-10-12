@@ -1,0 +1,21 @@
+{
+  "accepting_new_patients": true,
+  "insurance": [
+    "Triple-S Medicare Advantage",
+    "MCS Classicare",
+    "MCS Comercial",
+    "MCS Life",
+    "Medicare"
+  ],
+  "whatsapp_enabled": true,
+  "whatsapp_number": "17878487646",
+  "show_fax": true,
+  "facebook_url": "",
+  "announcement": {
+    "enabled": false,
+    "es": "",
+    "en": "",
+    "start": "",
+    "end": ""
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "Dra. Nina M. Vega Vázquez · Psiquiatra en Ponce",
+    "description": "Psiquiatra de adultos, niños y adolescentes en Ponce, Puerto Rico. Horario por cita previa.",
+    "og_locale": "es_PR"
+  },
+  "anchors": {
+    "home": "inicio",
+    "specialties": "especialidades",
+    "insurance": "planes",
+    "contact": "contacto"
+  },
+  "skip": "Saltar al contenido",
+  "nav": {
+    "label": "Principal",
+    "specialties": "Especialidades",
+    "insurance": "Planes médicos",
+    "contact": "Contacto",
+    "switch_short": "EN",
+    "switch_label": "Read this page in English"
+  },
+  "announcement_label": "Aviso",
+  "hero": {
+    "accepting": "Aceptando pacientes nuevos",
+    "eyebrow": "Psiquiatra · Ponce, Puerto Rico",
+    "cta": "Agende su cita",
+    "whatsapp": "WhatsApp"
+  },
+  "specialties": {
+    "eyebrow": "Especialidades",
+    "certifications": "Certificaciones"
+  },
+  "insurance": {
+    "eyebrow": "Planes médicos",
+    "title": "Planes médicos aceptados",
+    "book": "Agende su cita:"
+  },
+  "contact": {
+    "eyebrow": "Contacto",
+    "title": "Visítenos en Ponce",
+    "address": "Dirección",
+    "phone": "Teléfono",
+    "fax": "Fax",
+    "email": "Correo",
+    "hours": "Horario",
+    "cta": "Agende su cita",
+    "directions": "Cómo llegar"
+  },
+  "footer": {
+    "crisis_title": "¿Está en crisis?",
+    "crisis_before_988": "Llame o envíe un texto al",
+    "crisis_before_pas": ", o llame a la Línea PAS al",
+    "crisis_after": ". Esta oficina no atiende emergencias.",
+    "facebook": "Facebook",
+    "switch": "Read this page in English"
+  },
+  "quickbar": {
+    "label": "Contacto rápido",
+    "call": "Llamar",
+    "whatsapp": "WhatsApp"
+  },
+  "new_tab": "(abre en una pestaña nueva)",
+  "not_found": {
+    "title": "Página no encontrada",
+    "body": "La página que busca no existe.",
+    "back": "Volver al inicio"
+  }
+}

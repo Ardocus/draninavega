@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "Dr. Nina M. Vega Vázquez · Psychiatrist in Ponce",
+    "description": "Psychiatrist for adults, children and adolescents in Ponce, Puerto Rico. By appointment only.",
+    "og_locale": "en_US"
+  },
+  "anchors": {
+    "home": "home",
+    "specialties": "specialties",
+    "insurance": "insurance",
+    "contact": "contact"
+  },
+  "skip": "Skip to content",
+  "nav": {
+    "label": "Main",
+    "specialties": "Specialties",
+    "insurance": "Insurance",
+    "contact": "Contact",
+    "switch_short": "ES",
+    "switch_label": "Lea esta página en español"
+  },
+  "announcement_label": "Notice",
+  "hero": {
+    "accepting": "Accepting new patients",
+    "eyebrow": "Psychiatrist · Ponce, Puerto Rico",
+    "cta": "Book an appointment",
+    "whatsapp": "WhatsApp"
+  },
+  "specialties": {
+    "eyebrow": "Specialties",
+    "certifications": "Board certifications"
+  },
+  "insurance": {
+    "eyebrow": "Insurance",
+    "title": "Insurance plans accepted",
+    "book": "Book an appointment:"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Visit us in Ponce",
+    "address": "Address",
+    "phone": "Phone",
+    "fax": "Fax",
+    "email": "Email",
+    "hours": "Hours",
+    "cta": "Book an appointment",
+    "directions": "Get directions"
+  },
+  "footer": {
+    "crisis_title": "In crisis?",
+    "crisis_before_988": "Call or text",
+    "crisis_before_pas": ", or call Línea PAS at",
+    "crisis_after": ". This office does not handle emergencies.",
+    "facebook": "Facebook",
+    "switch": "Lea esta página en español"
+  },
+  "quickbar": {
+    "label": "Quick contact",
+    "call": "Call",
+    "whatsapp": "WhatsApp"
+  },
+  "new_tab": "(opens in a new tab)",
+  "not_found": {
+    "title": "Page not found",
+    "body": "The page you're looking for doesn't exist.",
+    "back": "Back to home"
+  }
+}
