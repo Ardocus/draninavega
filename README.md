@@ -23,7 +23,7 @@ npm run preview    # serves dist/
 | What | File |
 | --- | --- |
 | Confirmed practice facts (name, address, phones, specialties) | `src/data/practice.json` |
-| Office-editable toggles (§8): new patients, insurance, WhatsApp, fax, Facebook, announcement | `src/data/settings.json` (initial values; live values come from the portal) |
+| Office-editable toggles (§8): new patients, insurance, WhatsApp, Facebook, announcement | `src/data/settings.json` (initial values; live values come from the portal) |
 | All UI copy, per language | `src/i18n/es.json`, `src/i18n/en.json` |
 | Design tokens and layout | `src/styles/global.css` |
 | Page sections | `src/components/Home.astro` |
@@ -56,7 +56,6 @@ Git pushes that only touch `admin/` or docs don't rebuild the public site; build
 - [ ] MCS Life is still accepted
 - [ ] `accepting_new_patients` is still true
 - [ ] OK to include the crisis-line footer (built in, recommended)
-- [ ] OK to show the fax publicly (portal toggle)
 - [ ] Whether the office serves patients in English (portal → Otros → «La oficina atiende pacientes en inglés»)
 - [ ] Facebook page URL for the footer link (`facebook_url`, optional)
 - [ ] Test on a 360px Android phone and an iPhone with a home indicator; check VoiceOver in Spanish

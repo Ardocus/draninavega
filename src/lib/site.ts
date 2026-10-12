@@ -93,7 +93,6 @@ export const jsonLd = (lang: Lang, url: string) => {
     isAcceptingNewPatients: settings.accepting_new_patients,
     description: practice.summary[lang],
   };
-  if (settings.show_fax) data.faxNumber = dashed(practice.fax);
   if (facebookUrl) data.sameAs = [facebookUrl];
   return data;
 };

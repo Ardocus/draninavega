@@ -52,12 +52,11 @@ need(strs(p.specialties?.es, 160) && strs(p.specialties?.en, 160) && p.specialti
 need(strs(p.certifications, 160), 'certifications');
 for (const k of ['street', 'city', 'region', 'postal']) need(isStr(p.address?.[k], 100) && p.address[k], `address.${k}`);
 need(/^\+1\d{10}$/.test(p.phone) && isStr(p.phone_display, 20), 'phone');
-need(/^\+1\d{10}$/.test(p.fax) && isStr(p.fax_display, 20), 'fax');
 need(isStr(p.email, 120) && /^[^\s@<>]+@[^\s@<>]+$/.test(p.email), 'email');
 need(strs(p.available_languages, 2), 'available_languages');
 // The crisis block must always ship (DEV-HANDOFF §1.3).
 need(Array.isArray(p.crisis_lines) && p.crisis_lines.length === 2 && p.crisis_lines.every((l) => isStr(l.label, 40) && /^\+?\d{3,15}$/.test(l.tel)), 'crisis_lines');
-need(typeof s.accepting_new_patients === 'boolean' && typeof s.whatsapp_enabled === 'boolean' && typeof s.show_fax === 'boolean', 'settings toggles');
+need(typeof s.accepting_new_patients === 'boolean' && typeof s.whatsapp_enabled === 'boolean', 'settings toggles');
 need(strs(s.insurance, 80), 'insurance');
 need(isStr(s.whatsapp_number, 15) && /^\d*$/.test(s.whatsapp_number), 'whatsapp_number');
 need(isStr(s.facebook_url, 200), 'facebook_url');

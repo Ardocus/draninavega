@@ -92,7 +92,6 @@ export function validate(input: Obj, current: { practice: Obj; settings: Obj }) 
   if (specEs.length !== specEn.length) v.fail('practice.specialties', 'Cada especialidad necesita su versión en inglés.');
 
   const phone = v.phone(p.phone_display, 'practice.phone_display');
-  const fax = v.phone(p.fax_display, 'practice.fax_display');
   const postal = v.text(address.postal, 'practice.address.postal', { max: 10 });
   if (postal && !/^\d{5}(-\d{4})?$/.test(postal)) v.fail('practice.address.postal', 'Código postal inválido (5 dígitos).');
   const region = v.text(address.region, 'practice.address.region', { max: 2 }).toUpperCase();
@@ -128,8 +127,6 @@ export function validate(input: Obj, current: { practice: Obj; settings: Obj }) 
     },
     phone: phone.e164,
     phone_display: phone.display,
-    fax: fax.e164,
-    fax_display: fax.display,
     email: v.email(p.email, 'practice.email'),
     hours: {
       es: v.text(hours.es, 'practice.hours.es', { min: 2, max: 80 }),
@@ -170,7 +167,6 @@ export function validate(input: Obj, current: { practice: Obj; settings: Obj }) 
     insurance,
     whatsapp_enabled: waEnabled,
     whatsapp_number: wa.e164.replace(/^\+/, ''),
-    show_fax: v.bool(s.show_fax, 'settings.show_fax'),
     facebook_url: fb,
     announcement: { enabled: annEnabled, es: annEs, en: annEn, start, end },
   };

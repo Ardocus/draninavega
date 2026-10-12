@@ -86,12 +86,6 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
         <dt>{t.contact.phone}</dt>
         <dd><a href={telHref(practice.phone)}>{practice.phone_display}</a></dd>
       </div>
-      {settings.show_fax && (
-        <div>
-          <dt>{t.contact.fax}</dt>
-          <dd>{practice.fax_display}</dd>
-        </div>
-      )}
       <div>
         <dt>{t.contact.email}</dt>
         <dd><a href={`mailto:${practice.email}`}>{practice.email}</a></dd>

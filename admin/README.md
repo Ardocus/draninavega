@@ -21,7 +21,7 @@ She edits → **Publicar** saves a new content version in Blobs (last 20 kept) a
 | Announcement banner (ES/EN, optional dates) | Holiday closures etc. |
 | "Aceptando pacientes nuevos" | On/off |
 | Insurance plans | Add, remove, reorder |
-| Phone, fax (+ show/hide), email, WhatsApp (+ on/off), hours | Phones are normalized to (787) 555-1234 |
+| Phone, email, WhatsApp (+ on/off), hours | Phones are normalized to (787) 555-1234 |
 | Address | The "Cómo llegar" link is built from it |
 | Specialties (ES/EN), certifications | |
 | Tagline, summary, name (ES/EN) | |
